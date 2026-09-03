@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status-bar icon. Android masks this to a silhouette, so it is white-on-transparent
+     and carries no colour of its own: five bars for the week, the middle one today. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path android:fillColor="#FFFFFFFF" android:pathData="M3,14 h2.4 a1.2,1.2 0 0,1 1.2,1.2 v3.6 a1.2,1.2 0 0,1 -1.2,1.2 h-2.4 a1.2,1.2 0 0,1 -1.2,-1.2 v-3.6 a1.2,1.2 0 0,1 1.2,-1.2 z"/>
+    <path android:fillColor="#FFFFFFFF" android:pathData="M8.4,10 h2.4 a1.2,1.2 0 0,1 1.2,1.2 v7.6 a1.2,1.2 0 0,1 -1.2,1.2 h-2.4 a1.2,1.2 0 0,1 -1.2,-1.2 v-7.6 a1.2,1.2 0 0,1 1.2,-1.2 z"/>
+    <path android:fillColor="#FFFFFFFF" android:pathData="M13.8,4 h2.4 a1.2,1.2 0 0,1 1.2,1.2 v13.6 a1.2,1.2 0 0,1 -1.2,1.2 h-2.4 a1.2,1.2 0 0,1 -1.2,-1.2 v-13.6 a1.2,1.2 0 0,1 1.2,-1.2 z"/>
+    <path android:fillColor="#FFFFFFFF" android:pathData="M19.2,12 h2.4 a1.2,1.2 0 0,1 1.2,1.2 v5.6 a1.2,1.2 0 0,1 -1.2,1.2 h-2.4 a1.2,1.2 0 0,1 -1.2,-1.2 v-5.6 a1.2,1.2 0 0,1 1.2,-1.2 z"/>
+</vector>

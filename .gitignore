@@ -1,8 +1,19 @@
 node_modules/
 dist/
-android/
-ios/
 .DS_Store
 *.local
 .vite/
 coverage/
+
+# Android: the project is committed so CI can build it and so the icons,
+# permissions and notification drawable survive. Build output is not.
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+*.keystore
+*.jks

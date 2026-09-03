@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The deeper end of the create-action gradient, which is the app's one
+         saturated colour. Adaptive icon backgrounds must be a flat fill. -->
+    <color name="ic_launcher_background">#6B77BD</color>
+</resources>

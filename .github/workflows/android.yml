@@ -21,6 +21,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # A Gradle step that blocks on a prompt would otherwise sit here for six hours.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -46,7 +48,15 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      # Install the exact packages AGP 8.2.1 / compileSdk 34 needs, and accept the
+      # licences up front. Left to itself Gradle downloads missing components mid-build
+      # and blocks on a licence prompt that has no terminal to answer it.
       - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
+
+      - name: Accept SDK licences
+        run: yes | sdkmanager --licenses >/dev/null 2>&1 || true
 
       - name: Sync Capacitor
         run: npx cap sync android
@@ -62,7 +72,10 @@ jobs:
 
       - name: Build debug APK
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        run: ./gradlew assembleDebug --no-daemon --stacktrace --console=plain
+        env:
+          # Fail rather than pause if anything is still missing.
+          GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx3g -Dorg.gradle.daemon=false
 
       - name: Build release APK (unsigned)
         if: inputs.release

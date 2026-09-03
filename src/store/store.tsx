@@ -18,6 +18,7 @@ import {
 import { repo, StorageError } from '@/data/db';
 import { backupV1, buildMigration, hasV1Data, type MigrationResult } from '@/data/migrate';
 import { startOfWeek, todayKey } from '@/domain/dates';
+import { requestPermission } from '@/services/notifications';
 import { DEFAULT_SETTINGS } from '@/domain/types';
 import type {
   Area,
@@ -54,6 +55,8 @@ interface State {
   toasts: Toast[];
   /** Set once after a v1 migration so the app can explain what it did. */
   migration: MigrationResult['report'] | null;
+  /** False until the first run has been acknowledged. */
+  welcomed: boolean;
 }
 
 interface LoadedPayload {
@@ -65,6 +68,7 @@ interface LoadedPayload {
   milestones: Milestone[];
   weeks: Week[];
   migration: State['migration'];
+  welcomed: boolean;
 }
 
 type Action =
@@ -80,7 +84,8 @@ type Action =
   | { type: 'today'; today: DateKey }
   | { type: 'toast'; toast: Toast }
   | { type: 'dismissToast'; id: number }
-  | { type: 'clearMigration' };
+  | { type: 'clearMigration' }
+  | { type: 'welcomed' };
 
 const initial: State = {
   status: 'loading',
@@ -95,6 +100,7 @@ const initial: State = {
   today: todayKey(),
   toasts: [],
   migration: null,
+  welcomed: true, // assumed until boot proves otherwise, so no flash of Welcome
 };
 
 function reducer(state: State, action: Action): State {
@@ -125,6 +131,8 @@ function reducer(state: State, action: Action): State {
       return { ...state, toasts: state.toasts.filter((t) => t.id !== action.id) };
     case 'clearMigration':
       return { ...state, migration: null };
+    case 'welcomed':
+      return { ...state, welcomed: true };
   }
 }
 
@@ -184,9 +192,17 @@ export interface Store extends State {
 
   /* settings + chrome */
   updateSettings(patch: Partial<Settings>): Promise<void>;
+  /**
+   * Called when a reminder time is set. Giving something a time *is* the request to
+   * be reminded, so it turns that category on and asks for permission — otherwise the
+   * time would be stored and silently never fire, which is the worst of both.
+   */
+  enableReminders(kind: 'tasks' | 'habits'): Promise<void>;
   toast(message: string, opts?: { tone?: 'normal' | 'error'; undo?: () => void }): void;
   dismissToast(id: number): void;
   dismissMigration(): void;
+  /** Marks the first run done, so Welcome is never shown again. */
+  completeWelcome(): Promise<void>;
   weekOf(date: DateKey): Week | undefined;
 }
 
@@ -234,7 +250,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
         const data = await repo.loadAll();
         if (cancelled) return;
-        dispatch({ type: 'loaded', payload: { settings, ...data, migration: migrationReport } });
+
+        /* A migrated install has history and a name already, so it is not a first run.
+           Otherwise Welcome shows until it is explicitly completed. */
+        const seen = await repo.getMeta<boolean>('welcomed');
+        const welcomed =
+          seen === true || migrationReport !== null || data.tasks.length > 0 || !!settings.name;
+
+        dispatch({
+          type: 'loaded',
+          payload: { settings, ...data, migration: migrationReport, welcomed },
+        });
       } catch (err) {
         if (cancelled) return;
         dispatch({
@@ -625,9 +651,42 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         );
       },
 
+      async enableReminders(kind) {
+        const before = ref.current.settings;
+        if (before.notifications[kind]) return; // already on, nothing to ask
+        const result = await requestPermission();
+        if (result === 'denied') {
+          toast(
+            'Android is blocking WeekFlow’s notifications, so this reminder will not fire. Turn them on in system settings.',
+            { tone: 'error' },
+          );
+          return;
+        }
+        const next: Settings = {
+          ...before,
+          notifications: { ...before.notifications, [kind]: true },
+        };
+        await write(
+          () => dispatch({ type: 'settings', settings: next }),
+          () => dispatch({ type: 'settings', settings: before }),
+          () => repo.setSettings(next),
+        );
+        // 'unavailable' means the web build, where there is nothing to schedule
+        // against; the preference is still recorded for when it runs on a phone.
+      },
+
       toast,
       dismissToast: (id) => dispatch({ type: 'dismissToast', id }),
       dismissMigration: () => dispatch({ type: 'clearMigration' }),
+
+      async completeWelcome() {
+        dispatch({ type: 'welcomed' });
+        try {
+          await repo.setMeta('welcomed', true);
+        } catch {
+          // Not worth an error toast: the worst case is seeing the welcome once more.
+        }
+      },
       weekOf: (date) => {
         const ws = startOfWeek(date, ref.current.settings.weekStartsOn);
         return ref.current.weeks.find((w) => w.weekStart === ws);

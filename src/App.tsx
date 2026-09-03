@@ -9,6 +9,7 @@ import { HabitDetailScreen } from '@/screens/HabitDetail';
 import { HomeScreen } from '@/screens/Home';
 import { SettingsScreen } from '@/screens/Settings';
 import { WeekScreen } from '@/screens/Week';
+import { WelcomeScreen } from '@/screens/Welcome';
 import { startOfWeek } from '@/domain/dates';
 import { syncReminders } from '@/services/notifications';
 import { useStore } from '@/store/store';
@@ -99,6 +100,22 @@ export function App() {
 
   if (store.status === 'loading') return <Splash />;
   if (store.status === 'failed') return <FailedToLoad message={store.error} />;
+
+  // First run: no nav, no create button, nothing to be confused by.
+  if (!store.welcomed) {
+    return (
+      <div className="app">
+        <div className="app__wash" aria-hidden />
+        <div className="app__viewport">
+          <div className="screen screen--enter">
+            <WelcomeScreen onDone={() => go({ name: 'home' })} />
+          </div>
+        </div>
+        <Toasts />
+        <div id={OVERLAY_ROOT_ID} />
+      </div>
+    );
+  }
 
   const openTask = store.tasks.find((t) => t.id === openTaskId) ?? null;
   const weekStart = startOfWeek(selectedDay, store.settings.weekStartsOn);

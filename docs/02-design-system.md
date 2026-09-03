@@ -44,25 +44,39 @@ same world as the accents instead of reading as unconsidered grey.
 | `--glass` | `rgba(255,255,255,.74)` | `rgba(26,29,38,.74)` | Nav, sheets only |
 | `--ink` | `#242A38` | `#E8EAF0` | Primary text |
 | `--ink-2` | `#5D6579` | `#A2A9BA` | Body, secondary |
-| `--ink-3` | `#949BAD` | `#6E7689` | Meta, placeholders |
+| `--ink-3` | `#696E7A` | `#858FA5` | Meta, placeholders |
 | `--line` | `#E8ECF5` | `#2A2F3C` | Dividers, input borders |
 
-`--ink-3` on `--surface` is 3.1:1 — it is used only for non-essential metadata at 11.5px
-and never for anything the user must read to operate the app. Everything load-bearing
-uses `--ink-2` (5.9:1) or `--ink` (12.6:1).
+**Every one of these is measured, not asserted.** `npm run a11y` walks the running app
+across every screen in both themes and checks each rendered text node against the
+background actually painted behind it. It exits non-zero on any failure.
+
+The first pass failed 34 checks. `--ink-3` was `#949BAD`, which measured **2.6:1** — I
+had claimed 3.1:1 in this document without computing it, and used it for section
+headings, nav labels, day numbers and chart ticks, all of which are load-bearing. It is
+now `#696E7A` in light and `#858FA5` in dark, and everything clears 4.5:1:
+
+```
+47 text samples per theme · 0 failing
+5 area tint/deep pairs   · 0 failing
+touch targets under 44px · 0
+```
 
 ### Life areas
 
 Each area has a `tint` (surface, always behind text) and a `deep` (text, stroke, fill).
 `deep` on `tint` clears 4.5:1 in both themes.
 
-| Area | Light tint | Light deep | Dark tint | Dark deep |
-| --- | --- | --- | --- | --- |
-| Work | `#CFE0F7` | `#41669F` | `rgba(102,150,220,.22)` | `#8FB4E8` |
-| Health | `#C9E9DA` | `#2F7A62` | `rgba(60,160,128,.22)` | `#7FD3B4` |
-| Learning | `#DCD6F3` | `#5E4F9E` | `rgba(130,112,210,.24)` | `#B3A5EE` |
-| Personal | `#F8D5DA` | `#A8566A` | `rgba(210,120,145,.22)` | `#EDA0B0` |
-| Other | `#F8E6B9` | `#8A6B26` | `rgba(190,150,60,.22)` | `#DFC079` |
+| Area | Light tint | Light deep | ratio | Dark tint | Dark deep | ratio |
+| --- | --- | --- | --- | --- | --- | --- |
+| Work | `#CFE0F7` | `#3E6197` | 4.66 | `rgba(102,150,220,.22)` | `#8FB4E8` | 5.57 |
+| Health | `#C9E9DA` | `#2A6E58` | 4.66 | `rgba(60,160,128,.22)` | `#7FD3B4` | 6.87 |
+| Learning | `#DCD6F3` | `#5E4F9E` | 4.84 | `rgba(130,112,210,.24)` | `#B3A5EE` | 5.63 |
+| Personal | `#F8D5DA` | `#904A5B` | 4.67 | `rgba(210,120,145,.22)` | `#EDA0B0` | 5.88 |
+| Other | `#F8E6B9` | `#7F6223` | 4.61 | `rgba(190,150,60,.22)` | `#DFC079` | 6.65 |
+
+The light `deep` values were darkened from a first pass that measured 3.69–4.32:1 —
+close enough to look fine and still fail. The ratios above are measured, not intended.
 
 Set by `[data-area]` on any subtree; components read `var(--tint)` / `var(--deep)` and
 never name a colour directly.
@@ -261,8 +275,11 @@ Says what happened, what it means, and what to do. Never an error code, never an
 
 ## 6. Accessibility
 
-- Every interactive element ≥44×44px, including the 7 habit day dots (26px visual,
-  44px target via padding).
+- Every interactive element ≥44×44px, verified by `npm run a11y` rather than assumed —
+  the habit dots are a 26px visual inside a 44px target, and the row body stretches to
+  fill its row instead of hugging its text. The one documented exception is `.dot--sm`,
+  the seven small dots on a goal's linked-habit row, at 24×24: they meet WCAG 2.5.8's
+  24px minimum and every one of them is duplicated at full size on the habit screen.
 - Visible focus ring on every focusable element — 2px `--deep` at 3px offset. Never
   removed, only restyled.
 - Screen reader: checkboxes carry `role="checkbox"` + `aria-checked` + the item title;
@@ -270,6 +287,7 @@ Says what happened, what it means, and what to do. Never an error code, never an
   the tab bar is a `nav` with `aria-current="page"`; sheets are `role="dialog"` with
   `aria-modal` and a focus trap; live regions announce completion and errors.
 - Status never encoded by colour alone (§1).
+- Contrast and target size are enforced in CI, not left to review — see `npm run a11y`.
 - `prefers-reduced-motion` fully honoured (§4).
 - Text scales with the OS setting up to 200% without clipping; the layout uses no fixed
   heights on text containers.

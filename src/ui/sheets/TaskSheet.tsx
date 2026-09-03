@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pill, Ring, Sheet } from '../components';
+import { Pill, Ring, Sheet, TimePicker } from '../components';
 import { MoveIcon, TrashIcon } from '../Icons';
 import { addDays, dayName, relativeDay } from '@/domain/dates';
 import { goalProgress } from '@/domain/stats';
@@ -80,6 +80,20 @@ export function TaskSheet({
               )}
             </span>
           </button>
+        </div>
+      )}
+
+      {!task.done && (
+        <div style={{ marginTop: 'var(--sp-8)' }}>
+          <h3 className="label">Remind me</h3>
+          <TimePicker
+            value={task.remindAt}
+            label="Reminder time"
+            onChange={(remindAt) => {
+              void store.updateTask(task.id, { remindAt });
+              if (remindAt) void store.enableReminders('tasks');
+            }}
+          />
         </div>
       )}
 

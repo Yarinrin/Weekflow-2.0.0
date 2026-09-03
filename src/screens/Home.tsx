@@ -126,8 +126,9 @@ export function HomeScreen({
                 display: 'block',
                 background: 'none',
                 border: 0,
-                padding: 0,
-                marginTop: 5,
+                padding: '10px 0',
+                marginTop: 0,
+                minHeight: 44,
                 textAlign: 'left',
                 width: '100%',
               }}
@@ -199,9 +200,11 @@ export function HomeScreen({
               {stats.doneToDate} of {stats.plannedToDate} done
             </span>
             <span className="body" style={{ display: 'block', marginTop: 6 }}>
-              {stats.remaining > 0
-                ? `${stats.remaining} still ahead of you this week.`
-                : 'Everything planned this week is finished.'}
+              {stats.plannedTotal === 0
+                ? 'Nothing planned this week yet.'
+                : stats.remaining > 0
+                  ? `${stats.remaining} still ahead of you this week.`
+                  : 'Everything planned this week is finished.'}
             </span>
           </span>
         </button>

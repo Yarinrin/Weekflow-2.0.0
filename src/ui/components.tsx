@@ -249,13 +249,17 @@ export function Sheet({
   const panelRef = useRef<HTMLDivElement>(null);
   const returnTo = useRef<HTMLElement | null>(null);
   const titleId = useId();
-  // Resolved after mount, because App renders the overlay root in the same commit.
-  const [host, setHost] = useState<HTMLElement | null>(() =>
-    typeof document === 'undefined' ? null : document.getElementById(OVERLAY_ROOT_ID),
-  );
+  /* Resolved on open rather than cached at mount. The app swaps whole shells (welcome
+     -> main), which replaces the overlay root; a node captured during render can be the
+     outgoing one, and portalling into a detached element makes the sheet silently never
+     appear. Re-resolving each time it opens is cheap and cannot go stale. */
+  const [host, setHost] = useState<HTMLElement | null>(null);
   useEffect(() => {
-    if (!host) setHost(document.getElementById(OVERLAY_ROOT_ID));
-  }, [host]);
+    if (!open) return;
+    setHost((current) =>
+      current?.isConnected ? current : document.getElementById(OVERLAY_ROOT_ID),
+    );
+  }, [open]);
 
   // Held in a ref so `finish` stays stable. Callers almost always pass an inline
   // arrow, and a changing identity would re-run the focus effect on every render,
@@ -384,6 +388,64 @@ export function ChipGroup<T extends string>({
           {o.label}
         </button>
       ))}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------- time picker */
+
+/**
+ * Optional reminder time. Off by default — a task with no time never notifies,
+ * which is the behaviour anyone would expect from something they did not set.
+ *
+ * The presets cover the times people actually pick; the native time input is there
+ * for everything else and gives us the platform's own picker on Android.
+ */
+export function TimePicker({
+  value,
+  onChange,
+  label,
+}: {
+  /** 'HH:mm', or undefined for no reminder. */
+  value: string | undefined;
+  onChange: (next: string | undefined) => void;
+  label: string;
+}) {
+  const presets = ['07:00', '09:00', '12:00', '18:00', '20:00'];
+  const custom = value !== undefined && !presets.includes(value);
+
+  return (
+    <div>
+      <div role="group" aria-label={label} className="chips">
+        <button
+          type="button"
+          aria-pressed={value === undefined}
+          className={`chip${value === undefined ? ' chip--on' : ''}`}
+          onClick={() => onChange(undefined)}
+        >
+          No reminder
+        </button>
+        {presets.map((t) => (
+          <button
+            key={t}
+            type="button"
+            aria-pressed={value === t}
+            className={`chip${value === t ? ' chip--on' : ''}`}
+            onClick={() => onChange(t)}
+          >
+            {t}
+          </button>
+        ))}
+        <label className={`chip chip--time${custom ? ' chip--on' : ''}`}>
+          <span aria-hidden>{custom ? value : 'Other'}</span>
+          <input
+            type="time"
+            aria-label={`${label}, custom time`}
+            value={value ?? ''}
+            onChange={(e) => onChange(e.target.value || undefined)}
+          />
+        </label>
+      </div>
     </div>
   );
 }

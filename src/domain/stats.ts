@@ -246,9 +246,11 @@ export function buildInsights(
     }
   }
 
-  /* 3 — overloaded day, the most actionable thing insights can say. */
-  const withTasks = stats.byDay.filter((d) => d.planned > 0);
-  if (withTasks.length >= 3) {
+  /* 3 — overloaded day, the most actionable thing insights can say.
+     Gated on the week's total volume rather than on how many days are populated:
+     nothing is "overloaded" in a week with three tasks in it, however they fall,
+     but six on one day is worth saying even if the rest of the week is empty. */
+  if (stats.plannedTotal >= 6) {
     const heaviest = stats.byDay.reduce((a, b) => (b.planned > a.planned ? b : a));
     const mean = stats.plannedTotal / 7;
     if (heaviest.planned >= 4 && heaviest.planned >= mean * 1.75) {
@@ -287,9 +289,12 @@ export function buildInsights(
     });
   }
 
-  /* 5 — where attention actually went, against where the goals are. */
+  /* 5 — where attention actually went, against where the goals are.
+     The two branches need different evidence. Naming a neglected goal only needs
+     the goal and a week that had *something* in it; claiming one area dominated
+     needs at least two areas to compare. */
   const goalAreas = new Set(activeGoals(goals).map((g) => g.area));
-  if (stats.byArea.length >= 2 && goalAreas.size > 0) {
+  if (goalAreas.size > 0 && stats.byArea.length > 0) {
     const top = stats.byArea.reduce((a, b) => (b.planned > a.planned ? b : a));
     const neglected = [...goalAreas].filter(
       (a) => !stats.byArea.some((b) => b.area === a && b.done > 0),
@@ -303,7 +308,7 @@ export function buildInsights(
         } had no completed actions at all.`,
         tone: 'watch',
       });
-    } else {
+    } else if (stats.byArea.length >= 2) {
       out.push({
         id: 'attention',
         headline: `${top.area} took the largest share of your week.`,

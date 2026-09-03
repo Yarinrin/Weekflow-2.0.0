@@ -4,7 +4,7 @@
  * type-and-done.
  */
 import { useState } from 'react';
-import { ChipGroup, Sheet } from '../components';
+import { ChipGroup, Sheet, TimePicker } from '../components';
 import { HabitIcon, GoalIcon, TaskIcon } from '../Icons';
 import { addDays, dayShort, weekDates } from '@/domain/dates';
 import { AREAS, type Area, type DateKey, type HabitSchedule } from '@/domain/types';
@@ -75,6 +75,7 @@ export function NewTaskSheet({
   const [date, setDate] = useState<DateKey>(defaultDate);
   const [goalId, setGoalId] = useState<string>('');
   const [important, setImportant] = useState(false);
+  const [remindAt, setRemindAt] = useState<string | undefined>(undefined);
   const [busy, setBusy] = useState(false);
 
   const days = weekDates(weekStart);
@@ -86,6 +87,7 @@ export function NewTaskSheet({
     setDate(defaultDate);
     setGoalId('');
     setImportant(false);
+    setRemindAt(undefined);
   };
 
   const submit = async () => {
@@ -97,9 +99,11 @@ export function NewTaskSheet({
       date,
       important,
       ...(goalId ? { goalId } : {}),
+      ...(remindAt ? { remindAt } : {}),
     });
     setBusy(false);
     if (task) {
+      if (remindAt) await store.enableReminders('tasks');
       store.toast(`Added to ${dayShort(date)}`);
       reset();
       onClose();
@@ -156,6 +160,11 @@ export function NewTaskSheet({
           </>
         )}
 
+        <h3 className="label" style={{ marginTop: 'var(--sp-8)' }}>
+          Remind me <span style={{ textTransform: 'none', letterSpacing: 0 }}>— optional</span>
+        </h3>
+        <TimePicker value={remindAt} onChange={setRemindAt} label="Reminder time" />
+
         <div className="chips" style={{ marginTop: 'var(--sp-8)' }}>
           <button
             type="button"
@@ -194,6 +203,7 @@ export function NewHabitSheet({ open, onClose }: { open: boolean; onClose: () =>
   const [area, setArea] = useState<Area>('Health');
   const [schedule, setSchedule] = useState('daily');
   const [goalId, setGoalId] = useState('');
+  const [remindAt, setRemindAt] = useState<string | undefined>(undefined);
   const [busy, setBusy] = useState(false);
 
   const goals = store.goals.filter((g) => !g.archivedAt);
@@ -207,12 +217,15 @@ export function NewHabitSheet({ open, onClose }: { open: boolean; onClose: () =>
       area,
       schedule: picked,
       ...(goalId ? { goalId } : {}),
+      ...(remindAt ? { remindAt } : {}),
     });
     setBusy(false);
     if (habit) {
+      if (remindAt) await store.enableReminders('habits');
       store.toast(`${habit.name} added`);
       setName('');
       setGoalId('');
+      setRemindAt(undefined);
       onClose();
     }
   };
@@ -266,6 +279,14 @@ export function NewHabitSheet({ open, onClose }: { open: boolean; onClose: () =>
             />
           </>
         )}
+
+        <h3 className="label" style={{ marginTop: 'var(--sp-8)' }}>
+          Remind me <span style={{ textTransform: 'none', letterSpacing: 0 }}>— optional</span>
+        </h3>
+        <TimePicker value={remindAt} onChange={setRemindAt} label="Reminder time" />
+        <p className="meta" style={{ marginTop: 'var(--sp-3)', lineHeight: 1.5 }}>
+          Only on days this habit is due, and never once you have already done it.
+        </p>
 
         <button type="submit" className="btn" disabled={!name.trim() || busy}>
           Add habit

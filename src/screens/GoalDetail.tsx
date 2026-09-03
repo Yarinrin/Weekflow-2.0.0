@@ -132,17 +132,11 @@ export function GoalDetailScreen({
                   </span>
                   <button
                     type="button"
+                    className="iconBtn"
                     onClick={() => void store.deleteMilestone(m.id)}
                     aria-label={`Delete milestone ${m.title}`}
-                    style={{
-                      background: 'none',
-                      border: 0,
-                      color: 'var(--ink-3)',
-                      padding: 8,
-                      margin: -8,
-                    }}
                   >
-                    <TrashIcon style={{ width: 15, height: 15 }} />
+                    <TrashIcon />
                   </button>
                 </div>
               ))}

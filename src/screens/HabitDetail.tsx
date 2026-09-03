@@ -4,7 +4,7 @@
  * comment — the history simply has a gap.
  */
 import { useState } from 'react';
-import { BackButton, Bars, Empty, HabitDot, Pill, Ring, Section } from '@/ui/components';
+import { BackButton, Bars, Empty, HabitDot, Pill, Ring, Section, TimePicker } from '@/ui/components';
 import { TrashIcon } from '@/ui/Icons';
 import { DAY_SHORT, dayLetter, formatShort, startOfWeek, weekDates } from '@/domain/dates';
 import {
@@ -151,6 +151,25 @@ export function HabitDetailScreen({
           />
           <p className="body" style={{ marginTop: 'var(--sp-6)' }}>
             {historyNote(history, since)}
+          </p>
+        </div>
+      </Section>
+
+      {/* ------------------------------------------------------ reminder */}
+      <Section title="Remind me">
+        <div className="card">
+          <TimePicker
+            value={habit.remindAt}
+            label="Reminder time"
+            onChange={(remindAt) => {
+              void store.updateHabit(habit.id, { remindAt });
+              if (remindAt) void store.enableReminders('habits');
+            }}
+          />
+          <p className="meta" style={{ marginTop: 'var(--sp-5)', lineHeight: 1.5 }}>
+            {habit.remindAt
+              ? `Only on days this habit is due, and never once you have already done it.`
+              : 'No reminder. This habit will not notify you.'}
           </p>
         </div>
       </Section>

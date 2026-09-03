@@ -1,0 +1,838 @@
+<title>WeekFlow Editorial Minimal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;1,400&family=Instrument+Serif:ital@0;1&display=swap">
+<style>
+:root{
+  --paper:#F2F2EF; --sheet:#FAFAF9; --ink:#15171A; --ink-2:#5C6169; --ink-3:#8E939B;
+  --rule:#DBDBD5; --rule-2:#E7E7E2; --accent:#2A3F8F; --warn:#A33A2B;
+  --serif:"Instrument Serif",Georgia,"Times New Roman",serif;
+  --sans:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --q:140ms; --s:260ms; --l:420ms; --ease:cubic-bezier(.4,0,.2,1); --ease-out:cubic-bezier(.05,.7,.1,1);
+}
+*{box-sizing:border-box}
+body{background:#E2E2DD;margin:0}
+.stage{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:34px 16px;background:#E2E2DD;font-family:var(--sans)}
+.stage-note{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8A8A82;text-align:center}
+.stage-note b{color:#5C5C55;font-weight:600}
+.device{width:390px;height:844px;background:var(--paper);border-radius:42px;position:relative;overflow:hidden;
+  box-shadow:0 1px 2px rgba(30,30,26,.14),0 30px 70px -20px rgba(30,30,26,.42),0 0 0 9px #1b1b19,0 0 0 10px #33332f}
+.app{position:absolute;inset:0;display:flex;flex-direction:column;color:var(--ink)}
+
+/* status bar */
+.statusbar{height:52px;flex:none;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 6px;
+  font-size:12px;font-weight:600;letter-spacing:.02em}
+.statusbar .dots{display:flex;gap:4px;align-items:center;opacity:.85}
+.statusbar .bar{width:15px;height:9px;border:1px solid var(--ink);border-radius:2px;position:relative}
+.statusbar .bar::after{content:"";position:absolute;inset:1.5px;background:var(--ink);border-radius:1px}
+
+/* screens */
+.viewport{flex:1;position:relative;overflow:hidden}
+.screen{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+  padding:4px 0 112px;opacity:0;pointer-events:none;transform:translateX(14px);transition:opacity var(--s) var(--ease),transform var(--s) var(--ease)}
+.screen.on{opacity:1;pointer-events:auto;transform:none}
+.screen.back{transform:translateX(-14px)}
+.pad{padding:0 26px}
+
+/* stagger */
+.screen.on .stg{animation:rise var(--l) var(--ease-out) backwards;animation-delay:calc(var(--i,0)*45ms)}
+.screen[data-quiet] .stg{animation:none}
+.track i.instant,.bars b.instant{transition:none}
+@keyframes rise{from{opacity:0;transform:translateY(11px)}to{opacity:1;transform:none}}
+
+/* type */
+.eyebrow{font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3)}
+.display{font-family:var(--serif);font-weight:400;font-size:40px;line-height:1.04;letter-spacing:-.015em}
+.display .it{font-style:italic}
+.num{font-family:var(--serif);font-size:62px;line-height:.86;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.meta{font-size:12px;color:var(--ink-2);letter-spacing:.01em}
+.rule{height:1px;background:var(--rule);border:0;margin:0}
+
+/* section head */
+.sec{margin-top:34px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;padding-bottom:9px;border-bottom:1px solid var(--ink);margin-bottom:2px}
+.sec-h .r{font-size:11px;font-weight:500;color:var(--ink-2);font-variant-numeric:tabular-nums}
+
+/* rows */
+.row{display:flex;gap:14px;align-items:flex-start;padding:15px 0;border-bottom:1px solid var(--rule-2);
+  background:none;border-left:0;border-right:0;border-top:0;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.row:active{background:rgba(21,23,26,.028)}
+.row-b{flex:1;min-width:0}
+.row-t{font-size:15px;line-height:1.32;letter-spacing:-.005em;transition:color var(--s) var(--ease),opacity var(--s) var(--ease)}
+.row-m{margin-top:5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--ink-3);letter-spacing:.04em}
+.row-m .sep{width:2px;height:2px;border-radius:50%;background:var(--rule);flex:none}
+.goal-tag{color:var(--accent);font-weight:500}
+.imp{font-family:var(--serif);font-size:17px;line-height:0;color:var(--accent);position:relative;top:2px}
+.late{color:var(--warn);font-weight:500}
+.done .row-t{color:var(--ink-3);text-decoration:line-through;text-decoration-thickness:1px;text-underline-offset:2px}
+.done .row-m{opacity:.55}
+
+/* check */
+.chk{flex:none;width:23px;height:23px;margin-top:1px;border-radius:50%;border:1px solid var(--ink-3);background:none;
+  padding:0;cursor:pointer;display:grid;place-items:center;transition:background var(--s) var(--ease),border-color var(--s) var(--ease),transform var(--q) var(--ease)}
+.chk:active{transform:scale(.9)}
+.chk svg{width:12px;height:12px;overflow:visible}
+.chk path{fill:none;stroke:var(--sheet);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:16;stroke-dashoffset:16;transition:stroke-dashoffset 180ms var(--ease) 70ms}
+.chk[aria-checked=true]{background:var(--ink);border-color:var(--ink);animation:pop 340ms var(--ease)}
+.chk[aria-checked=true] path{stroke-dashoffset:0}
+@keyframes pop{0%{transform:scale(1)}42%{transform:scale(1.14)}100%{transform:scale(1)}}
+
+/* progress hairline */
+.track{display:block;height:2px;background:var(--rule);position:relative;overflow:hidden}
+.track i{position:absolute;inset:0 auto 0 0;background:var(--ink);width:0;transition:width 620ms var(--ease)}
+.track.thin i{background:var(--accent)}
+
+/* week strip */
+.strip{display:flex;gap:0;margin-top:20px;border-top:1px solid var(--ink);border-bottom:1px solid var(--rule)}
+.day{flex:1;padding:12px 0 11px;background:none;border:0;border-right:1px solid var(--rule-2);cursor:pointer;
+  font:inherit;color:var(--ink-3);display:flex;flex-direction:column;align-items:center;gap:9px;transition:color var(--s) var(--ease)}
+.day:last-child{border-right:0}
+.day .l{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+.day .d{font-family:var(--serif);font-size:19px;line-height:1;font-variant-numeric:tabular-nums}
+.day .load{width:15px;height:2px;background:var(--rule);position:relative}
+.day .load i{position:absolute;inset:0 auto 0 0;background:var(--ink-3);transition:width var(--l) var(--ease)}
+.day.sel{color:var(--ink)}
+.day.sel .load i{background:var(--ink)}
+.day.today .l{color:var(--accent)}
+.day.sel{box-shadow:inset 0 -2px 0 var(--ink)}
+
+/* habit dots */
+.dots{display:flex;gap:5px;align-items:center}
+.dot{width:7px;height:7px;border-radius:50%;border:1px solid var(--rule);background:none;padding:0;transition:background var(--s) var(--ease),border-color var(--s) var(--ease),transform var(--s) var(--ease)}
+.dot.f{background:var(--ink);border-color:var(--ink)}
+.dot.t{border-color:var(--accent);border-style:dashed}
+.dot.f.t{background:var(--accent);border-style:solid}
+.dot.j{animation:pop 340ms var(--ease)}
+.hb{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--rule-2);width:100%;
+  background:none;border-left:0;border-right:0;border-top:0;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.hb-n{flex:1;min-width:0;font-size:14px;letter-spacing:-.005em}
+.hb-s{font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums;letter-spacing:.03em}
+
+/* stat bars (insights) */
+.bars{display:flex;align-items:flex-end;gap:6px;height:88px;margin-top:16px}
+.bars>span{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:8px;align-items:center;height:100%}
+.bars b{display:block;width:62%;background:var(--rule);transition:height 620ms var(--ease);height:0}
+.bars .hi b{background:var(--ink)}
+.bars em{font-size:9px;font-style:normal;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.bars .hi em{color:var(--ink)}
+
+.quote{font-family:var(--serif);font-size:25px;line-height:1.24;letter-spacing:-.01em;margin:0}
+.quote .it{font-style:italic}
+.body{font-size:14px;line-height:1.62;color:var(--ink-2);letter-spacing:.002em}
+
+/* tab bar */
+.tabs{flex:none;height:94px;display:flex;align-items:flex-start;border-top:1px solid var(--ink);
+  background:var(--paper);padding:0 0 20px;position:relative;z-index:5}
+.tab{flex:1;padding:13px 0 0;background:none;border:0;cursor:pointer;font:inherit;color:var(--ink-3);
+  display:flex;flex-direction:column;align-items:center;gap:7px;transition:color var(--s) var(--ease);position:relative}
+.tab .l{font-size:9px;font-weight:600;letter-spacing:.16em;text-transform:uppercase}
+.tab svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.tab.on{color:var(--ink)}
+.tab.on::before{content:"";position:absolute;top:-1px;left:26%;right:26%;height:2px;background:var(--ink);
+  animation:wipe var(--s) var(--ease)}
+@keyframes wipe{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.fab{flex:none;width:60px;display:grid;place-items:center;padding-top:9px}
+.fab button{width:44px;height:44px;border-radius:50%;background:var(--ink);color:var(--paper);border:0;cursor:pointer;
+  display:grid;place-items:center;transition:transform var(--q) var(--ease)}
+.fab button:active{transform:scale(.92)}
+.fab svg{width:19px;height:19px;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;fill:none;transition:transform var(--s) var(--ease)}
+.fab button.open svg{transform:rotate(45deg)}
+
+/* sheets */
+.scrim{position:absolute;inset:0;background:rgba(20,20,18,.34);opacity:0;pointer-events:none;
+  transition:opacity var(--s) var(--ease);z-index:8;border:0;padding:0;width:100%;cursor:pointer}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--sheet);border-radius:24px 24px 0 0;z-index:9;
+  transform:translateY(101%);transition:transform 360ms var(--ease-out);padding:12px 26px 30px;
+  box-shadow:0 -1px 0 var(--rule);max-height:82%;overflow-y:auto}
+.sheet.on{transform:none}
+.sheet.out{transition:transform 220ms cubic-bezier(.3,0,1,1)}
+.grab{width:34px;height:3px;border-radius:2px;background:var(--rule);margin:0 auto 20px}
+.opt{display:flex;align-items:center;gap:16px;padding:17px 0;border-bottom:1px solid var(--rule-2);width:100%;
+  background:none;border-left:0;border-right:0;border-top:0;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.opt:active{opacity:.6}
+.opt .ic{width:34px;height:34px;flex:none;border:1px solid var(--rule);border-radius:50%;display:grid;place-items:center}
+.opt svg{width:16px;height:16px;fill:none;stroke:var(--ink);stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.opt .t{display:block;font-family:var(--serif);font-size:21px;line-height:1.1}
+.opt .d{display:block;font-size:11.5px;color:var(--ink-3);margin-top:3px}
+.field{width:100%;border:0;border-bottom:1px solid var(--ink);background:none;font:inherit;font-size:17px;
+  color:var(--ink);padding:10px 0;outline:none;letter-spacing:-.005em}
+.field::placeholder{color:var(--ink-3)}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.chip{padding:7px 13px;border:1px solid var(--rule);border-radius:999px;background:none;font:inherit;font-size:11.5px;
+  color:var(--ink-2);cursor:pointer;transition:all var(--q) var(--ease);letter-spacing:.02em}
+.chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.btn{width:100%;padding:15px;background:var(--ink);color:var(--paper);border:0;border-radius:2px;font:inherit;
+  font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;margin-top:26px;
+  transition:transform var(--q) var(--ease)}
+.btn:active{transform:scale(.985)}
+.btn.ghost{background:none;color:var(--ink);box-shadow:inset 0 0 0 1px var(--rule);margin-top:12px}
+
+/* back */
+.back-b{display:inline-flex;align-items:center;gap:8px;background:none;border:0;padding:0;cursor:pointer;font:inherit;
+  font-size:10px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);margin-bottom:22px}
+.back-b svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+.seg{display:flex;border:1px solid var(--rule);margin-top:18px}
+.seg button{flex:1;padding:10px;background:none;border:0;font:inherit;font-size:10px;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);cursor:pointer;transition:all var(--s) var(--ease)}
+.seg button.on{background:var(--ink);color:var(--paper)}
+
+/* toast */
+.toast{position:absolute;left:26px;right:26px;bottom:108px;background:var(--ink);color:var(--paper);padding:13px 16px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:7;border-radius:2px;
+  transform:translateY(calc(100% + 120px));opacity:0;font-size:12.5px;letter-spacing:.01em;pointer-events:none;
+  transition:transform 340ms var(--ease-out),opacity var(--s) var(--ease)}
+.toast.on{transform:none;opacity:1;pointer-events:auto}
+.toast button{background:none;border:0;color:var(--paper);font:inherit;font-size:10px;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.empty{padding:26px 0 6px;font-family:var(--serif);font-size:20px;color:var(--ink-3);line-height:1.3}
+.empty span{display:block;font-family:var(--sans);font-size:12.5px;margin-top:8px;color:var(--ink-3)}
+
+@media (max-width:700px){
+  .stage{padding:0;gap:0;min-height:100dvh}
+  .stage-note{display:none}
+  .device{width:100%;height:100dvh;border-radius:0;box-shadow:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:1ms!important;animation-delay:0ms!important;transition-duration:1ms!important}
+}
+</style>
+
+<div class="stage">
+  <div class="device">
+    <div class="app">
+      <div class="statusbar">
+        <span>9:41</span>
+        <span class="dots">
+          <svg width="16" height="10" viewBox="0 0 16 10" fill="currentColor"><rect x="0" y="6" width="2.5" height="4" rx=".6"/><rect x="4" y="4" width="2.5" height="6" rx=".6"/><rect x="8" y="2" width="2.5" height="8" rx=".6"/><rect x="12" y="0" width="2.5" height="10" rx=".6"/></svg>
+          <i class="bar"></i>
+        </span>
+      </div>
+
+      <div class="viewport" id="vp">
+        <section class="screen" id="s-home"></section>
+        <section class="screen" id="s-week"></section>
+        <section class="screen" id="s-goals"></section>
+        <section class="screen" id="s-goal"></section>
+        <section class="screen" id="s-habit"></section>
+        <section class="screen" id="s-you"></section>
+      </div>
+
+      <div class="toast" id="toast"><span id="toast-t"></span><button id="toast-u">Undo</button></div>
+
+      <nav class="tabs">
+        <button class="tab" data-go="home"><svg viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg><span class="l">Home</span></button>
+        <button class="tab" data-go="week"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="l">Week</span></button>
+        <span class="fab"><button id="fab" aria-label="Create"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></span>
+        <button class="tab" data-go="goals"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.4"/></svg><span class="l">Goals</span></button>
+        <button class="tab" data-go="you"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.7"/><path d="M5 20c.9-3.6 3.6-5.4 7-5.4s6.1 1.8 7 5.4"/></svg><span class="l">You</span></button>
+      </nav>
+
+      <button class="scrim" id="scrim" aria-label="Close"></button>
+      <div class="sheet" id="sheet"></div>
+    </div>
+  </div>
+  <p class="stage-note"><b>Direction A — Editorial Minimal.</b> Tap a circle to complete · tap a row for detail · + to create</p>
+</div>
+
+<script>
+(function(){
+"use strict";
+var TODAY="2026-09-03", WEEK=["2026-08-30","2026-08-31","2026-09-01","2026-09-02","2026-09-03","2026-09-04","2026-09-05"];
+var DL=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+var DF=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+var ML=["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+var S={
+  name:"Yarin", sel:TODAY, seg:"plan", goal:"g1", habit:"h3",
+  intention:"Fewer things, finished.",
+  goals:[
+    {id:"g1",title:"Build the portfolio",cat:"Work",deadline:"2026-10-15",mode:"ms",
+     desc:"Four projects, written properly, on a site I actually like.",
+     ms:[{t:"Choose the four projects",d:1},{t:"Shoot the project photos",d:1},{t:"Write case study — Halo",d:1},{t:"Design the site",d:1},{t:"Write case study — Ferry",d:0},{t:"Deploy and share it",d:0}]},
+    {id:"g2",title:"Save ₪12,000",cat:"Personal",deadline:"2027-03-31",mode:"manual",
+     desc:"Six months of runway before going freelance.",cur:4900,tgt:12000,unit:"₪",ms:[]},
+    {id:"g3",title:"Learn guitar",cat:"Learning",deadline:"2026-12-31",mode:"ms",
+     desc:"Play three songs end to end without stopping.",
+     ms:[{t:"Learn three open-chord songs",d:1},{t:"Practise 10 hours",d:1},{t:"Tune by ear",d:1},{t:"Learn barre chords",d:0},{t:"Record a first cover",d:0}]}
+  ],
+  tasks:[
+    {id:"t1",t:"Plan the week",c:"Personal",d:"2026-08-30",done:1},
+    {id:"t2",t:"Groceries for the week",c:"Other",d:"2026-08-30",done:1},
+    {id:"t3",t:"Portfolio: rewrite the case study intro",c:"Work",d:"2026-08-31",done:1,g:"g1"},
+    {id:"t4",t:"Gym — pull day",c:"Health",d:"2026-08-31",done:1},
+    {id:"t5",t:"Portfolio: export the project images",c:"Work",d:"2026-09-01",done:1,g:"g1"},
+    {id:"t6",t:"Linear algebra — chapter 3",c:"Learning",d:"2026-09-01",done:1},
+    {id:"t7",t:"Dentist, 16:00",c:"Health",d:"2026-09-01",done:1},
+    {id:"t8",t:"Portfolio: build the project page",c:"Work",d:"2026-09-02",done:1,g:"g1"},
+    {id:"t9",t:"Gym — leg day",c:"Health",d:"2026-09-02",done:1},
+    {id:"t10",t:"Reply to Noa about the freelance brief",c:"Work",d:"2026-09-03",done:0,carried:"2026-09-02"},
+    {id:"t11",t:"Finish the Halo case study",c:"Work",d:"2026-09-03",done:0,imp:1,g:"g1",
+      note:"Two sections left — the research bit and the outcome. Keep it under 600 words."},
+    {id:"t12",t:"Gym — push day",c:"Health",d:"2026-09-03",done:1},
+    {id:"t13",t:"Practise barre chords",c:"Personal",d:"2026-09-03",done:0,g:"g3"},
+    {id:"t14",t:"Linear algebra — chapter 4",c:"Learning",d:"2026-09-03",done:0},
+    {id:"t15",t:"Call the bank about the savings plan",c:"Personal",d:"2026-09-03",done:0,imp:1,g:"g2"},
+    {id:"t16",t:"Portfolio: deploy to Vercel",c:"Work",d:"2026-09-04",done:0,g:"g1"},
+    {id:"t17",t:"Record a scratch cover",c:"Learning",d:"2026-09-04",done:0,g:"g3"},
+    {id:"t18",t:"Review the week",c:"Personal",d:"2026-09-05",done:0},
+    {id:"t19",t:"Coffee with Adi",c:"Other",d:"2026-09-05",done:0}
+  ],
+  habits:[
+    {id:"h1",n:"Morning workout",cat:"Health",sch:"4×/week",tgt:4,days:null,
+     done:["2026-08-31","2026-09-02","2026-09-03"],streak:3,hist:[3,4,4,2,4,3,4,3]},
+    {id:"h2",n:"Read 20 pages",cat:"Learning",sch:"Every day",tgt:7,days:null,
+     done:["2026-08-30","2026-08-31","2026-09-01","2026-09-02"],streak:12,hist:[7,6,7,7,5,7,6,4]},
+    {id:"h3",n:"Practise guitar",cat:"Learning",sch:"4×/week",tgt:4,days:null,g:"g3",
+     done:["2026-08-31","2026-09-01"],streak:2,hist:[2,3,4,3,4,2,4,2]},
+    {id:"h4",n:"Drink 2L of water",cat:"Health",sch:"Every day",tgt:7,days:null,
+     done:["2026-08-30","2026-08-31","2026-09-01","2026-09-02"],streak:5,hist:[6,7,5,7,7,6,7,4]}
+  ],
+  dayStrength:[68,81,94,79,62,71,55],
+  trend:[64,71,58,77,69,82,74],
+  lastHabit:71
+};
+
+/* ---------- helpers ---------- */
+function $(s,r){return (r||document).querySelector(s)}
+function di(d){return WEEK.indexOf(d)}
+function fmt(d){var p=d.split("-");return ML[+p[1]-1]+" "+(+p[2])}
+function short(d){var p=d.split("-");return ML[+p[1]-1].slice(0,3)+" "+(+p[2])}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function tasksOn(d){return S.tasks.filter(function(t){return t.d===d})}
+function goal(id){for(var i=0;i<S.goals.length;i++)if(S.goals[i].id===id)return S.goals[i];return null}
+function habit(id){for(var i=0;i<S.habits.length;i++)if(S.habits[i].id===id)return S.habits[i];return null}
+function gpct(g){
+  if(g.mode==="manual")return Math.round(g.cur/g.tgt*100);
+  var d=0;g.ms.forEach(function(m){if(m.d)d++});
+  return g.ms.length?Math.round(d/g.ms.length*100):0;
+}
+function weekStats(){
+  var upto=WEEK.slice(0,di(TODAY)+1), pl=0,dn=0;
+  upto.forEach(function(d){tasksOn(d).forEach(function(t){pl++;if(t.done)dn++})});
+  var all=0,ad=0;
+  WEEK.forEach(function(d){tasksOn(d).forEach(function(t){all++;if(t.done)ad++})});
+  return {plan:pl,done:dn,pct:pl?Math.round(dn/pl*100):0,all:all,allDone:ad,left:all-ad};
+}
+function habitPct(){
+  var t=0,d=0;
+  S.habits.forEach(function(h){t+=h.tgt;d+=h.done.length});
+  return Math.round(d/t*100);
+}
+function goalActions(id){
+  var n=0;
+  S.tasks.forEach(function(t){if(t.g===id&&t.done)n++});
+  S.habits.forEach(function(h){if(h.g===id)n+=h.done.length});
+  return n;
+}
+function catCounts(){
+  var m={};
+  S.tasks.forEach(function(t){m[t.c]=m[t.c]||{n:0,d:0};m[t.c].n++;if(t.done)m[t.c].d++});
+  return Object.keys(m).map(function(k){return {c:k,n:m[k].n,d:m[k].d,p:Math.round(m[k].d/m[k].n*100)}})
+    .sort(function(a,b){return b.n-a.n});
+}
+
+/* ---------- fragments ---------- */
+function taskRow(t){
+  var g=t.g?goal(t.g):null, m=[];
+  m.push(esc(t.c));
+  if(t.carried)m.push('<span class="late">Moved from '+DL[di(t.carried)]+'</span>');
+  if(g)m.push('<span class="goal-tag">'+esc(g.title)+'</span>');
+  return '<div class="row stg'+(t.done?" done":"")+'" style="--i:'+(t._i||0)+'">'+
+    '<button class="chk" data-chk="'+t.id+'" role="checkbox" aria-checked="'+(t.done?"true":"false")+'" aria-label="'+esc(t.t)+'">'+
+      '<svg viewBox="0 0 12 12"><path d="M2 6.3 4.7 9 10 3.2"/></svg></button>'+
+    '<button class="row-b" data-task="'+t.id+'" style="background:none;border:0;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer">'+
+      '<div class="row-t">'+(t.imp?'<span class="imp">✻</span> ':'')+esc(t.t)+'</div>'+
+      '<div class="row-m">'+m.join('<span class="sep"></span>')+'</div>'+
+    '</button></div>';
+}
+/* A 4x-a-week habit has no meaningful *day* streak — it is measured in weeks hit. */
+function streakLabel(h){
+  return h.tgt>=7 ? h.streak+"-day streak" : h.streak+" week"+(h.streak===1?"":"s")+" at target";
+}
+function habitDots(h,jump){
+  return '<span class="dots">'+WEEK.map(function(d){
+    var f=h.done.indexOf(d)>-1, t=d===TODAY;
+    return '<button class="dot'+(f?" f":"")+(t?" t":"")+(jump&&t?" j":"")+'" data-hd="'+h.id+"|"+d+'" aria-label="'+DL[di(d)]+'"></button>';
+  }).join("")+'</span>';
+}
+
+/* ---------- screens ---------- */
+function renderHome(){
+  var st=weekStats(), td=tasksOn(TODAY), tdd=td.filter(function(t){return t.done}).length;
+  var p=TODAY.split("-"), hr=9;
+  var due=S.habits.filter(function(h){return h.done.indexOf(TODAY)<0});
+  var i=0;
+  var html='<div class="pad">'+
+    '<div class="stg" style="--i:0;padding-top:14px"><div class="eyebrow">'+DF[di(TODAY)]+' · '+fmt(TODAY)+'</div>'+
+      '<h1 class="display" style="margin:14px 0 0">Good morning,<br><span class="it">'+esc(S.name)+'.</span></h1></div>'+
+
+    '<div class="stg" style="--i:1;margin-top:26px;padding:18px 0;border-top:1px solid var(--ink);border-bottom:1px solid var(--rule)">'+
+      '<div class="eyebrow">This week’s intention</div>'+
+      '<p class="quote" style="margin-top:10px"><span class="it">'+esc(S.intention)+'</span></p></div>'+
+
+    '<div class="sec stg" style="--i:2"><div class="sec-h"><span class="eyebrow">Today</span>'+
+      '<span class="r">'+tdd+' of '+td.length+'</span></div>'+
+      td.map(function(t,k){t._i=3+k;return taskRow(t)}).join("")+'</div>';
+
+  i=3+td.length;
+  html+='<div class="sec stg" style="--i:'+(i++)+'"><div class="sec-h"><span class="eyebrow">This week</span>'+
+      '<span class="r">'+short(WEEK[0])+' — '+short(WEEK[6])+'</span></div>'+
+    '<div style="display:flex;align-items:flex-end;gap:16px;padding:22px 0 18px">'+
+      '<span class="num" data-count="'+st.pct+'">0</span>'+
+      '<span style="font-family:var(--serif);font-size:26px;line-height:1;padding-bottom:6px">%</span>'+
+      '<span class="meta" style="flex:1;text-align:right;line-height:1.5">'+st.done+' of '+st.plan+' done so far<br>'+st.left+' still ahead of you</span></div>'+
+    '<div class="track"><i data-w="'+st.pct+'"></i></div></div>';
+
+  html+='<div class="sec stg" style="--i:'+(i++)+'"><div class="sec-h"><span class="eyebrow">Habits today</span>'+
+      '<span class="r">'+(S.habits.length-due.length)+' of '+S.habits.length+'</span></div>'+
+    S.habits.map(function(h){
+      return '<div class="hb"><button data-habit="'+h.id+'" style="flex:1;min-width:0;background:none;border:0;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer">'+
+        '<div class="hb-n">'+esc(h.n)+'</div>'+
+        '<div class="hb-s" style="margin-top:4px">'+h.done.length+'/'+h.tgt+' this week · '+streakLabel(h)+'</div></button>'+
+        habitDots(h)+'</div>';
+    }).join("")+'</div>';
+
+  html+='<div class="sec stg" style="--i:'+(i++)+'"><div class="sec-h"><span class="eyebrow">Working toward</span>'+
+      '<span class="r">'+S.goals.length+' active</span></div>'+
+    S.goals.map(function(g){
+      var p=gpct(g), a=goalActions(g.id);
+      return '<button class="row" data-goal="'+g.id+'" style="align-items:center"><span class="row-b">'+
+        '<span class="row-t" style="display:block">'+esc(g.title)+'</span>'+
+        '<span class="row-m">'+a+' action'+(a===1?"":"s")+' this week</span>'+
+        '<span class="track" style="margin-top:11px"><i data-w="'+p+'"></i></span></span>'+
+        '<span style="font-family:var(--serif);font-size:24px;line-height:1;font-variant-numeric:tabular-nums;padding-left:14px">'+p+'</span></button>';
+    }).join("")+'</div>';
+
+  html+='<div class="stg" style="--i:'+i+';margin-top:40px;padding-top:22px;border-top:1px solid var(--rule)">'+
+    '<p class="body" style="font-size:12.5px;color:var(--ink-3)">Saturday is review day. Your week will be ready to read then.</p></div>';
+
+  $("#s-home").innerHTML=html+"</div>";
+}
+
+function renderWeek(){
+  var st=weekStats();
+  var head='<div class="pad" style="padding-top:14px">'+
+    '<div class="stg" style="--i:0"><div class="eyebrow">'+short(WEEK[0])+' — '+short(WEEK[6])+'</div>'+
+    '<h1 class="display" style="margin:12px 0 0;font-size:34px">Your week</h1></div>'+
+    '<div class="seg stg" style="--i:1">'+
+      '<button data-seg="plan" class="'+(S.seg==="plan"?"on":"")+'">Plan</button>'+
+      '<button data-seg="review" class="'+(S.seg==="review"?"on":"")+'">Review</button></div>';
+
+  if(S.seg==="plan"){
+    var loads=WEEK.map(function(d){return tasksOn(d).length});
+    var mx=Math.max.apply(null,loads);
+    var sel=tasksOn(S.sel), sd=sel.filter(function(t){return t.done}).length;
+    var hs=S.habits.filter(function(h){return true});
+    head+='<div class="strip stg" style="--i:2">'+WEEK.map(function(d,k){
+      return '<button class="day'+(d===S.sel?" sel":"")+(d===TODAY?" today":"")+'" data-day="'+d+'">'+
+        '<span class="l">'+DL[k][0]+'</span><span class="d">'+(+d.split("-")[2])+'</span>'+
+        '<span class="load"><i data-w="'+Math.round(loads[k]/mx*100)+'"></i></span></button>';
+    }).join("")+'</div>'+
+    '<div class="stg" style="--i:3;display:flex;align-items:baseline;justify-content:space-between;margin-top:24px">'+
+      '<h2 class="display" style="font-size:28px;margin:0">'+DF[di(S.sel)]+(S.sel===TODAY?'<span class="it" style="font-size:15px;color:var(--accent)"> · today</span>':'')+'</h2>'+
+      '<span class="meta">'+sd+'/'+sel.length+'</span></div>'+
+    '<div style="margin-top:16px">'+
+      (sel.length?sel.map(function(t,k){t._i=4+k;return taskRow(t)}).join("")
+        :'<div class="empty stg" style="--i:4">Nothing planned.<span>A clear day is a plan too — or add one thing worth doing.</span></div>')+
+    '</div>'+
+    '<div class="sec stg" style="--i:'+(4+sel.length)+'"><div class="sec-h"><span class="eyebrow">Habits due</span></div>'+
+      S.habits.map(function(h){
+        var f=h.done.indexOf(S.sel)>-1;
+        return '<div class="hb"><span class="hb-n"'+(f?' style="color:var(--ink-3);text-decoration:line-through"':'')+'>'+esc(h.n)+'</span>'+
+          '<span class="hb-s">'+h.sch+'</span>'+
+          '<button class="dot'+(f?" f":"")+'" data-hd="'+h.id+"|"+S.sel+'" style="width:22px;height:22px;margin-left:4px" aria-label="Complete '+esc(h.n)+'"></button></div>';
+      }).join("")+'</div>'+
+    '<div class="sec stg" style="--i:'+(5+sel.length)+'"><div class="sec-h"><span class="eyebrow">Week load</span></div>'+
+      '<p class="body" style="margin:16px 0 0">Thursday carries '+loads[4]+' tasks — nearly twice your average day. '+
+      'Over the last eight weeks, three of them usually slide to Friday.</p></div>';
+  } else {
+    var cc=catCounts(), hp=habitPct(), delta=hp-S.lastHabit;
+    var best=0;S.dayStrength.forEach(function(v,k){if(v>S.dayStrength[best])best=k});
+    head+='<div class="sec stg" style="--i:2" ><div class="sec-h"><span class="eyebrow">Insights</span><span class="r">Week to date</span></div>'+
+      '<p class="quote" style="margin:24px 0 0">You finished <span class="it">'+st.pct+'%</span> of what you planned.</p>'+
+      '<p class="body" style="margin-top:12px">'+st.done+' of '+st.plan+' tasks through '+DF[di(TODAY)]+'. Your eight-week average is 71%.</p>'+
+      '<div class="bars">'+S.trend.concat([st.pct]).map(function(v,k){
+        return '<span class="'+(k===7?"hi":"")+'"><b data-h="'+Math.round(v/100*68)+'"></b><em>'+(k===7?"now":"w"+(k+1))+'</em></span>';
+      }).join("")+'</div></div>'+
+
+      '<div class="sec stg" style="--i:3"><div class="sec-h"><span class="eyebrow">Your strongest day</span></div>'+
+      '<p class="quote" style="margin:22px 0 0"><span class="it">'+DF[best]+'</span> is when you follow through.</p>'+
+      '<p class="body" style="margin-top:12px">'+S.dayStrength[best]+'% completion over eight weeks, against '+S.dayStrength[4]+'% on Thursdays. Worth putting the hard thing on a Tuesday.</p>'+
+      '<div class="bars">'+S.dayStrength.map(function(v,k){
+        return '<span class="'+(k===best?"hi":"")+'"><b data-h="'+Math.round(v/100*68)+'"></b><em>'+DL[k][0]+'</em></span>';
+      }).join("")+'</div></div>'+
+
+      '<div class="sec stg" style="--i:4"><div class="sec-h"><span class="eyebrow">Where your attention went</span></div>'+
+      cc.map(function(c){
+        return '<div class="row" style="cursor:default;align-items:center"><span class="row-b">'+
+          '<span class="row-t" style="display:block;font-size:14px">'+esc(c.c)+'</span>'+
+          '<span class="track" style="margin-top:10px"><i data-w="'+c.p+'"></i></span></span>'+
+          '<span class="meta" style="padding-left:14px;font-variant-numeric:tabular-nums">'+c.d+'/'+c.n+'</span></div>';
+      }).join("")+
+      '<p class="body" style="margin-top:16px">Learning took 3 actions this week, up from 1. Work still takes the largest share, which matches the portfolio deadline.</p></div>'+
+
+      '<div class="sec stg" style="--i:5"><div class="sec-h"><span class="eyebrow">Habit consistency</span><span class="r">'+hp+'%</span></div>'+
+      '<p class="body" style="margin-top:16px">'+(delta>=0?"Up ":"Down ")+Math.abs(delta)+' points on last week. Reading is the one holding steady; guitar is the one that slips when Work gets heavy.</p></div>'+
+
+      '<div class="sec stg" style="--i:6"><div class="sec-h"><span class="eyebrow">Weekly review</span><span class="r">Draft</span></div>'+
+      '<p class="quote" style="margin:26px 0 0">You planned less this week,<br>and <span class="it">finished more.</span></p>'+
+      '<div style="margin-top:30px"><div class="eyebrow">What went well</div>'+
+        '<p class="body" style="margin-top:9px">Four portfolio sessions, on four different days. That is the first week the project moved without a weekend cram.</p></div>'+
+      '<div style="margin-top:24px"><div class="eyebrow">What got in the way</div>'+
+        '<p class="body" style="margin-top:9px">Thursday was overloaded again — six tasks against an average of three. Noa’s reply has now moved twice.</p></div>'+
+      '<div style="margin-top:24px"><div class="eyebrow">A pattern we noticed</div>'+
+        '<p class="body" style="margin-top:9px">Guitar practice stops the moment a work deadline gets close. It has happened in three of the last four weeks — it is the habit that absorbs pressure.</p></div>'+
+      '<div style="margin-top:24px"><div class="eyebrow">Next week’s focus</div>'+
+        '<p class="body" style="margin-top:9px">Move two Thursday tasks to Tuesday, and protect one 20-minute guitar slot on a work day rather than saving it for the weekend.</p></div>'+
+      '<button class="btn ghost" data-act="regen" style="margin-top:28px">Regenerate</button>'+
+      '<p class="body" style="font-size:11px;margin-top:14px;color:var(--ink-3)">Written from this week’s numbers. Nothing leaves your phone except the totals.</p></div>';
+  }
+  $("#s-week").innerHTML=head+"</div>";
+}
+
+function renderGoals(){
+  var html='<div class="pad" style="padding-top:14px">'+
+    '<div class="stg" style="--i:0"><div class="eyebrow">Three active</div>'+
+    '<h1 class="display" style="margin:12px 0 0;font-size:34px">Working toward</h1></div>'+
+    '<div class="sec stg" style="--i:1">'+
+    S.goals.map(function(g,k){
+      var p=gpct(g), a=goalActions(g.id);
+      return '<button class="row" data-goal="'+g.id+'" style="flex-direction:column;align-items:stretch;gap:0;padding:22px 0;--i:'+(2+k)+'">'+
+        '<span style="display:flex;align-items:baseline;justify-content:space-between;gap:14px">'+
+          '<span style="font-family:var(--serif);font-size:23px;line-height:1.15;letter-spacing:-.01em">'+esc(g.title)+'</span>'+
+          '<span style="font-family:var(--serif);font-size:23px;font-variant-numeric:tabular-nums">'+p+'%</span></span>'+
+        '<span class="track" style="margin:14px 0 11px"><i data-w="'+p+'"></i></span>'+
+        '<span class="row-m" style="margin:0">'+esc(g.cat)+'<span class="sep"></span>'+
+          (g.mode==="manual"?g.unit+g.cur.toLocaleString()+" of "+g.unit+g.tgt.toLocaleString():
+            g.ms.filter(function(m){return m.d}).length+" of "+g.ms.length+" milestones")+
+          '<span class="sep"></span>'+a+' action'+(a===1?"":"s")+' this week</span></button>';
+    }).join("")+'</div>'+
+    '<div class="stg" style="--i:5;margin-top:36px;padding-top:24px;border-top:1px solid var(--rule)">'+
+      '<div class="eyebrow">Archived</div>'+
+      '<p class="body" style="margin-top:10px;font-size:13px">Run a 10K — finished in June. Kept, so your history still adds up.</p></div>';
+  $("#s-goals").innerHTML=html+"</div>";
+}
+
+function renderGoal(){
+  var g=goal(S.goal), p=gpct(g), a=goalActions(g.id);
+  var linked=S.tasks.filter(function(t){return t.g===g.id&&WEEK.indexOf(t.d)>-1});
+  var lh=S.habits.filter(function(h){return h.g===g.id});
+  var html='<div class="pad" style="padding-top:16px">'+
+    '<button class="back-b stg" data-back="goals" style="--i:0"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>Goals</button>'+
+    '<div class="stg" style="--i:1"><div class="eyebrow">'+esc(g.cat)+' · due '+fmt(g.deadline)+'</div>'+
+      '<h1 class="display" style="margin:12px 0 0;font-size:36px">'+esc(g.title)+'</h1>'+
+      '<p class="body" style="margin-top:12px">'+esc(g.desc)+'</p></div>'+
+    '<div class="stg" style="--i:2;display:flex;align-items:flex-end;gap:14px;margin-top:30px">'+
+      '<span class="num" data-count="'+p+'">0</span>'+
+      '<span style="font-family:var(--serif);font-size:26px;padding-bottom:6px">%</span>'+
+      '<span class="meta" style="flex:1;text-align:right;line-height:1.5">'+
+        (g.mode==="manual"?g.unit+g.cur.toLocaleString()+' saved<br>of '+g.unit+g.tgt.toLocaleString():
+          g.ms.filter(function(m){return m.d}).length+' of '+g.ms.length+' milestones<br>'+a+' actions this week')+'</span></div>'+
+    '<div class="track stg" style="--i:3;margin-top:16px"><i data-w="'+p+'"></i></div>';
+
+  if(g.mode==="ms"){
+    html+='<div class="sec stg" style="--i:4"><div class="sec-h"><span class="eyebrow">Milestones</span></div>'+
+      g.ms.map(function(m,k){
+        return '<div class="row'+(m.d?" done":"")+'" style="align-items:center;cursor:default">'+
+          '<button class="chk" data-ms="'+g.id+"|"+k+'" role="checkbox" aria-checked="'+(m.d?"true":"false")+'" aria-label="'+esc(m.t)+'">'+
+            '<svg viewBox="0 0 12 12"><path d="M2 6.3 4.7 9 10 3.2"/></svg></button>'+
+          '<span class="row-b"><span class="row-t">'+esc(m.t)+'</span></span></div>';
+      }).join("")+'</div>';
+  } else {
+    html+='<div class="sec stg" style="--i:4"><div class="sec-h"><span class="eyebrow">Progress</span><span class="r">'+g.unit+(g.tgt-g.cur).toLocaleString()+' to go</span></div>'+
+      '<p class="body" style="margin-top:16px">Adding '+g.unit+'1,180 a month keeps you on time. You are '+g.unit+'320 ahead of that line.</p>'+
+      '<button class="btn ghost" data-act="log" style="margin-top:20px">Log a deposit</button></div>';
+  }
+
+  html+='<div class="sec stg" style="--i:5"><div class="sec-h"><span class="eyebrow">This week</span><span class="r">'+a+' action'+(a===1?"":"s")+'</span></div>'+
+    (linked.length||lh.length?
+      linked.map(function(t){t._i=0;return taskRow(t)}).join("")+
+      lh.map(function(h){
+        return '<div class="hb"><button data-habit="'+h.id+'" style="flex:1;background:none;border:0;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer">'+
+          '<div class="hb-n">'+esc(h.n)+'</div><div class="hb-s" style="margin-top:4px">'+h.done.length+'/'+h.tgt+' this week</div></button>'+
+          habitDots(h)+'</div>';
+      }).join("")
+      :'<div class="empty">Nothing scheduled.<span>A goal with no actions this week is just a wish. Add one.</span></div>')+
+    '<p class="body" style="margin-top:18px;font-size:12.5px;color:var(--ink-3)">Every task and habit above is linked to this goal, which is how its progress is counted.</p></div>'+
+    '<button class="btn ghost" data-act="edit" style="margin-top:34px">Edit goal</button>';
+  $("#s-goal").innerHTML=html+"</div>";
+}
+
+function renderHabit(){
+  var h=habit(S.habit), g=h.g?goal(h.g):null;
+  var pct=Math.round(h.done.length/h.tgt*100);
+  var avg=Math.round(h.hist.reduce(function(a,b){return a+b},0)/h.hist.length/h.tgt*100);
+  var html='<div class="pad" style="padding-top:16px">'+
+    '<button class="back-b stg" data-back="home" style="--i:0"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>Back</button>'+
+    '<div class="stg" style="--i:1"><div class="eyebrow">'+esc(h.cat)+' · '+esc(h.sch)+'</div>'+
+      '<h1 class="display" style="margin:12px 0 0;font-size:36px">'+esc(h.n)+'</h1></div>'+
+    '<div class="stg" style="--i:2;display:flex;gap:34px;margin-top:30px;padding-bottom:22px;border-bottom:1px solid var(--rule)">'+
+      '<span><span class="num" style="font-size:48px" data-count="'+h.streak+'">0</span>'+
+        '<span class="eyebrow" style="display:block;margin-top:10px">'+(h.tgt>=7?"Day streak":"Weeks at target")+'</span></span>'+
+      '<span><span class="num" style="font-size:48px" data-count="'+avg+'">0</span>'+
+        '<span class="eyebrow" style="display:block;margin-top:10px">Consistency</span></span></div>'+
+    '<div class="sec stg" style="--i:3"><div class="sec-h"><span class="eyebrow">This week</span><span class="r">'+h.done.length+' of '+h.tgt+'</span></div>'+
+      '<div style="display:flex;justify-content:space-between;padding:24px 4px 6px">'+
+        WEEK.map(function(d,k){
+          var f=h.done.indexOf(d)>-1, t=d===TODAY;
+          return '<span style="display:flex;flex-direction:column;align-items:center;gap:12px">'+
+            '<span class="eyebrow" style="letter-spacing:.1em;'+(t?"color:var(--accent)":"")+'">'+DL[k][0]+'</span>'+
+            '<button class="dot'+(f?" f":"")+(t?" t":"")+'" data-hd="'+h.id+"|"+d+'" style="width:26px;height:26px" aria-label="'+DL[k]+'"></button></span>';
+        }).join("")+'</div>'+
+      '<p class="body" style="margin-top:20px;font-size:12.5px">Tap any day to correct it. A gap is a gap — nothing is taken away.</p></div>'+
+    '<div class="sec stg" style="--i:4"><div class="sec-h"><span class="eyebrow">Last eight weeks</span></div>'+
+      '<div class="bars">'+h.hist.map(function(v,k){
+        return '<span class="'+(k===7?"hi":"")+'"><b data-h="'+Math.round(v/h.tgt*68)+'"></b><em>'+(k===7?"now":k+1)+'</em></span>';
+      }).join("")+'</div>'+
+      '<p class="body" style="margin-top:18px">Steadiest in weeks 3 and 5. The dips line up with your heaviest work weeks.</p></div>';
+  if(g)html+='<div class="sec stg" style="--i:5"><div class="sec-h"><span class="eyebrow">Serves</span></div>'+
+      '<button class="row" data-goal="'+g.id+'" style="align-items:center"><span class="row-b">'+
+      '<span class="row-t" style="display:block">'+esc(g.title)+'</span>'+
+      '<span class="row-m">'+goalActions(g.id)+' actions this week</span></span>'+
+      '<span style="font-family:var(--serif);font-size:22px">'+gpct(g)+'</span></button></div>';
+  html+='<button class="btn ghost" data-act="edit" style="margin-top:34px">Edit habit</button>';
+  $("#s-habit").innerHTML=html+"</div>";
+}
+
+function renderYou(){
+  $("#s-you").innerHTML='<div class="pad" style="padding-top:14px">'+
+    '<div class="stg" style="--i:0"><div class="eyebrow">Settings</div>'+
+    '<h1 class="display" style="margin:12px 0 0;font-size:34px">'+esc(S.name)+'</h1>'+
+    '<p class="body" style="margin-top:10px">Twelve weeks of history · 143 tasks · 4 habits · 3 goals</p></div>'+
+    ['Your name','Appearance','Week starts on','Reminders','AI weekly review','Export your data','About WeekFlow'].map(function(t,k){
+      var sub=["Yarin","Light","Sunday","3 on","Relay · no key on device","JSON · 34 KB","Version 2.0"][k];
+      return '<button class="row stg" data-act="setting" style="--i:'+(1+k)+';align-items:center"><span class="row-b">'+
+        '<span class="row-t" style="display:block;font-size:14.5px">'+t+'</span></span>'+
+        '<span class="meta">'+sub+'</span>'+
+        '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:var(--ink-3);stroke-width:1.5;margin-left:12px;flex:none"><path d="M9 5l7 7-7 7"/></svg></button>';
+    }).join("")+
+    '<p class="body stg" style="--i:9;margin-top:34px;font-size:12px;color:var(--ink-3)">WeekFlow works entirely on this phone. The only thing that ever leaves it is a set of totals, and only when you ask for a review.</p></div>';
+}
+
+/* ---------- animation of measured values ----------
+   `from` carries the previous frame's values so a re-render animates
+   old -> new rather than replaying every bar from zero on each tap. */
+function snapshot(root){
+  return {
+    w:[].map.call(root.querySelectorAll("[data-w]"),function(el){return el.style.width}),
+    h:[].map.call(root.querySelectorAll("[data-h]"),function(el){return el.style.height}),
+    c:[].map.call(root.querySelectorAll("[data-count]"),function(el){return el.textContent})
+  };
+}
+function seed(list,from,prop){
+  if(!from||from.length!==list.length)return;
+  [].forEach.call(list,function(el,i){
+    if(!from[i])return;
+    el.classList.add("instant");
+    el.style[prop]=from[i];
+  });
+  if(list.length)list[0].offsetHeight;                 // one forced reflow, then transitions resume
+  [].forEach.call(list,function(el){el.classList.remove("instant")});
+}
+function animate(root,from){
+  var ws=root.querySelectorAll("[data-w]"), hs=root.querySelectorAll("[data-h]"), cs=root.querySelectorAll("[data-count]");
+  seed(ws,from&&from.w,"width");
+  seed(hs,from&&from.h,"height");
+  var red=matchMedia("(prefers-reduced-motion:reduce)").matches;
+  requestAnimationFrame(function(){
+    [].forEach.call(ws,function(el){el.style.width=el.getAttribute("data-w")+"%"});
+    [].forEach.call(hs,function(el){el.style.height=el.getAttribute("data-h")+"px"});
+    [].forEach.call(cs,function(el,i){
+      var to=+el.getAttribute("data-count");
+      var fromV=from&&from.c&&from.c.length===cs.length?(parseInt(from.c[i],10)||0):0;
+      if(red||fromV===to){el.textContent=to;return}
+      var t0=null;
+      requestAnimationFrame(function tick(ts){
+        if(!t0)t0=ts;
+        var k=Math.min(1,(ts-t0)/700), e=1-Math.pow(1-k,3);
+        el.textContent=Math.round(fromV+(to-fromV)*e);
+        if(k<1)requestAnimationFrame(tick);
+      });
+    });
+  });
+}
+
+/* ---------- routing ---------- */
+var CUR="home", RENDER={home:renderHome,week:renderWeek,goals:renderGoals,goal:renderGoal,habit:renderHabit,you:renderYou};
+function go(name,back){
+  var next=$("#s-"+name), prev=$("#s-"+CUR);
+  next.removeAttribute("data-quiet");
+  RENDER[name]();
+  if(prev!==next){prev.classList.remove("on");prev.classList.toggle("back",!back)}
+  next.classList.remove("back");
+  next.classList.add("on");
+  next.scrollTop=0;
+  CUR=name;
+  [].forEach.call(document.querySelectorAll(".tab"),function(b){
+    b.classList.toggle("on",b.getAttribute("data-go")===name||(name==="goal"&&b.getAttribute("data-go")==="goals"));
+  });
+  animate(next,null);
+}
+/* Re-render in place: keep the entrance stagger silent, and carry the old
+   measured values across so only what actually changed moves. */
+function refresh(){
+  var s=$("#s-"+CUR), from=snapshot(s), top=s.scrollTop;
+  s.setAttribute("data-quiet","");
+  RENDER[CUR]();
+  s.classList.add("on");
+  s.scrollTop=top;
+  animate(s,from);
+}
+
+/* ---------- sheets ---------- */
+var sheetOpen=false;
+function openSheet(html){
+  $("#sheet").innerHTML='<div class="grab"></div>'+html;
+  $("#sheet").classList.remove("out");
+  $("#scrim").classList.add("on");
+  requestAnimationFrame(function(){$("#sheet").classList.add("on")});
+  sheetOpen=true;
+  $("#fab").classList.toggle("open",true);
+}
+function closeSheet(){
+  if(!sheetOpen)return;
+  sheetOpen=false;
+  $("#sheet").classList.add("out");
+  $("#sheet").classList.remove("on");
+  $("#scrim").classList.remove("on");
+  $("#fab").classList.remove("open");
+}
+function addSheet(){
+  openSheet('<div class="eyebrow" style="margin-bottom:6px">Create</div>'+
+    [["Task","Something to do, on a day","M4 12h16M4 6h16M4 18h10"],
+     ["Habit","Something to do repeatedly","M4 17c3-8 5-8 8 0s5 8 8 0"],
+     ["Goal","Something to work toward","M12 4v16M4 12h16"]].map(function(o){
+      return '<button class="opt" data-new="'+o[0].toLowerCase()+'"><span class="ic"><svg viewBox="0 0 24 24"><path d="'+o[2]+'"/></svg></span>'+
+        '<span><span class="t">'+o[0]+'</span><span class="d">'+o[1]+'</span></span></button>';
+    }).join(""));
+}
+function newTaskSheet(){
+  openSheet('<div class="eyebrow">New task</div>'+
+    '<input class="field" style="margin-top:14px" placeholder="What needs doing?" autofocus>'+
+    '<div class="eyebrow" style="margin-top:26px">Category</div>'+
+    '<div class="chips" data-group="cat">'+["Work","Health","Learning","Personal","Other"].map(function(c,k){
+      return '<button class="chip'+(k===0?" on":"")+'">'+c+'</button>'}).join("")+'</div>'+
+    '<div class="eyebrow" style="margin-top:24px">Day</div>'+
+    '<div class="chips" data-group="day">'+WEEK.map(function(d,k){
+      return '<button class="chip'+(d===S.sel?" on":"")+'">'+DL[k]+'</button>'}).join("")+'</div>'+
+    '<div class="eyebrow" style="margin-top:24px">Link to a goal <span style="text-transform:none;letter-spacing:0;font-weight:400">— optional</span></div>'+
+    '<div class="chips" data-group="goal">'+["None"].concat(S.goals.map(function(g){return g.title})).map(function(t,k){
+      return '<button class="chip'+(k===0?" on":"")+'">'+esc(t)+'</button>'}).join("")+'</div>'+
+    '<button class="btn" data-act="save">Add to Thursday</button>');
+}
+function taskSheet(id){
+  var t=null;S.tasks.forEach(function(x){if(x.id===id)t=x});
+  if(!t)return;
+  var g=t.g?goal(t.g):null;
+  openSheet('<div class="eyebrow">'+esc(t.c)+' · '+DF[di(t.d)]+(t.imp?" · Important":"")+'</div>'+
+    '<h2 class="display" style="font-size:29px;margin:12px 0 0">'+esc(t.t)+'</h2>'+
+    (t.note?'<p class="body" style="margin-top:14px">'+esc(t.note)+'</p>':'')+
+    (t.carried?'<p class="body late" style="margin-top:14px;font-size:12.5px">Moved here from '+DF[di(t.carried)]+'.</p>':'')+
+    (g?'<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--rule-2)">'+
+        '<div class="eyebrow">Contributes to</div>'+
+        '<button class="row" data-goal="'+g.id+'" style="align-items:center;border-bottom:0"><span class="row-b">'+
+        '<span class="row-t" style="display:block">'+esc(g.title)+'</span>'+
+        '<span class="track" style="margin-top:11px"><i data-w="'+gpct(g)+'"></i></span></span>'+
+        '<span style="font-family:var(--serif);font-size:22px;padding-left:14px">'+gpct(g)+'</span></button></div>':'')+
+    '<button class="btn" data-chk="'+t.id+'">'+(t.done?"Mark as not done":"Mark as done")+'</button>'+
+    '<button class="btn ghost" data-act="move">Move to tomorrow</button>');
+  animate($("#sheet"));
+}
+
+/* ---------- toast ---------- */
+var toastT=null, undoFn=null;
+function toast(msg,undo){
+  clearTimeout(toastT);
+  $("#toast-t").textContent=msg;
+  $("#toast-u").style.display=undo?"":"none";
+  undoFn=undo||null;
+  $("#toast").classList.add("on");
+  toastT=setTimeout(function(){$("#toast").classList.remove("on")},3200);
+}
+
+/* ---------- interaction ---------- */
+document.addEventListener("click",function(e){
+  var el;
+
+  if(el=e.target.closest("[data-go]")){go(el.getAttribute("data-go"));closeSheet();return}
+  if(el=e.target.closest("[data-back]")){go(el.getAttribute("data-back"),true);return}
+  if(e.target.closest("#scrim")){closeSheet();return}
+  if(e.target.closest("#fab")){sheetOpen?closeSheet():addSheet();return}
+
+  if(el=e.target.closest("[data-chk]")){
+    var id=el.getAttribute("data-chk"), t=null;
+    S.tasks.forEach(function(x){if(x.id===id)t=x});
+    if(!t)return;
+    t.done=t.done?0:1;
+    var box=document.querySelector('.chk[data-chk="'+id+'"]');
+    if(box){
+      box.setAttribute("aria-checked",t.done?"true":"false");
+      box.closest(".row").classList.toggle("done",!!t.done);
+    }
+    if(sheetOpen)closeSheet();
+    setTimeout(function(){
+      refresh();
+      if(t.done)toast("“"+t.t.slice(0,26)+(t.t.length>26?"…":"")+"” done",function(){t.done=0;refresh()});
+    },t.done?420:120);
+    return;
+  }
+
+  if(el=e.target.closest("[data-ms]")){
+    var p=el.getAttribute("data-ms").split("|"), g=goal(p[0]), m=g.ms[+p[1]];
+    m.d=m.d?0:1;
+    el.setAttribute("aria-checked",m.d?"true":"false");
+    el.closest(".row").classList.toggle("done",!!m.d);
+    setTimeout(function(){
+      refresh();
+      if(m.d)toast("Milestone done · "+g.title+" is now "+gpct(g)+"%");
+    },420);
+    return;
+  }
+
+  if(el=e.target.closest("[data-hd]")){
+    var q=el.getAttribute("data-hd").split("|"), h=habit(q[0]), d=q[1], i=h.done.indexOf(d);
+    if(i>-1){h.done.splice(i,1);el.classList.remove("f")}
+    else{h.done.push(d);el.classList.add("f");el.classList.add("j")}
+    setTimeout(function(){
+      refresh();
+      if(i<0)toast(h.n+" · "+h.done.length+" of "+h.tgt+" this week");
+    },340);
+    return;
+  }
+
+  if(el=e.target.closest("[data-task]")){taskSheet(el.getAttribute("data-task"));return}
+  if(el=e.target.closest("[data-goal]")){S.goal=el.getAttribute("data-goal");closeSheet();go("goal");return}
+  if(el=e.target.closest("[data-habit]")){S.habit=el.getAttribute("data-habit");go("habit");return}
+  if(el=e.target.closest("[data-day]")){S.sel=el.getAttribute("data-day");refresh();return}
+  if(el=e.target.closest("[data-seg]")){S.seg=el.getAttribute("data-seg");refresh();return}
+  if(el=e.target.closest("[data-new]")){
+    if(el.getAttribute("data-new")==="task")newTaskSheet();
+    else{closeSheet();toast("The "+el.getAttribute("data-new")+" flow follows the same pattern")}
+    return;
+  }
+  if(el=e.target.closest(".chip")){
+    var grp=el.closest("[data-group]");
+    if(grp){grp.querySelectorAll(".chip").forEach(function(c){c.classList.remove("on")});el.classList.add("on")}
+    return;
+  }
+  if(el=e.target.closest("[data-act]")){
+    var a=el.getAttribute("data-act");
+    if(a==="save"){closeSheet();toast("Added to Thursday")}
+    else if(a==="regen")toast("Rewriting from this week’s numbers…");
+    else if(a==="move"){closeSheet();toast("Moved to Friday")}
+    else if(a==="log")toast("Deposit logging is part of the goal flow");
+    else toast("Preview — not wired up");
+    return;
+  }
+});
+$("#toast-u").addEventListener("click",function(){
+  if(undoFn)undoFn();
+  $("#toast").classList.remove("on");
+});
+
+go("home");
+})();
+</script>

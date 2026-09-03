@@ -202,14 +202,10 @@ export const repo = {
     weeks: Week[];
   }): Promise<void> {
     await guard('replace your data', async () => {
+      // Dexie's positional overloads stop at five tables; past that it takes an array.
       await db.transaction(
         'rw',
-        db.tasks,
-        db.habits,
-        db.completions,
-        db.goals,
-        db.milestones,
-        db.weeks,
+        [db.tasks, db.habits, db.completions, db.goals, db.milestones, db.weeks],
         async () => {
           await Promise.all([
             db.tasks.clear(),

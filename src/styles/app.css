@@ -1,0 +1,1143 @@
+/* Base layer and shared components. Everything here reads tokens.css. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--t-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* Native feel: no tap flash, no text selection on chrome, no rubber-band on body. */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  overscroll-behavior: none;
+}
+
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--deep);
+  outline-offset: 3px;
+  border-radius: var(--r-xs);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ------------------------------------------------------------------ shell */
+
+.app {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 560px; /* on a tablet or desktop the app stays phone-shaped */
+  margin: 0 auto;
+  background: var(--ground);
+  overflow: hidden;
+}
+
+/* One ambient wash, top of the app, behind everything. */
+.app__wash {
+  position: absolute;
+  inset: -18% -30% auto -30%;
+  height: 58%;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(48% 60% at 22% 34%, color-mix(in srgb, var(--work) 70%, transparent), transparent 70%),
+    radial-gradient(44% 52% at 82% 12%, color-mix(in srgb, var(--learning) 62%, transparent), transparent 72%),
+    radial-gradient(40% 46% at 60% 62%, color-mix(in srgb, var(--health) 45%, transparent), transparent 72%);
+}
+
+.app__viewport {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Content dissolves into the ground under the floating nav rather than being
+   sliced by the screen edge. */
+.app__fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 58px;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(to top, var(--ground) 34%, transparent);
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding: calc(var(--safe-top) + 12px) 0 calc(132px + var(--safe-bottom));
+}
+
+.screen__pad {
+  padding: 0 var(--gutter);
+}
+
+/* Screen transitions. Only transform and opacity. */
+.screen--enter {
+  animation: screen-in var(--dur-base) var(--ease) backwards;
+}
+.screen--enter-back {
+  animation: screen-in-back var(--dur-base) var(--ease) backwards;
+}
+@keyframes screen-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px) scale(0.99);
+  }
+}
+@keyframes screen-in-back {
+  from {
+    opacity: 0;
+    transform: translateX(-16px) scale(0.99);
+  }
+}
+
+/* List entrance. Runs on navigation only — never on re-render, or every tick
+   of a checkbox would replay the whole screen. */
+.stagger > * {
+  animation: rise var(--dur-slow) var(--ease-out) backwards;
+}
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 45ms; }
+.stagger > *:nth-child(3) { animation-delay: 90ms; }
+.stagger > *:nth-child(4) { animation-delay: 135ms; }
+.stagger > *:nth-child(5) { animation-delay: 180ms; }
+.stagger > *:nth-child(n + 6) { animation-delay: 225ms; }
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(13px);
+  }
+}
+
+/* ------------------------------------------------------------------- type */
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.018em;
+  text-wrap: balance;
+  margin: 0;
+}
+.d1 { font-size: var(--t-d1); line-height: 1.1; }
+.d2 { font-size: var(--t-d2); line-height: 1.15; }
+.d3 { font-size: var(--t-d3); line-height: 1.18; }
+.d4 { font-size: var(--t-d4); line-height: 1.22; }
+.it { font-style: italic; font-weight: 400; }
+
+.label {
+  font-size: var(--t-label);
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.body {
+  font-size: var(--t-body);
+  line-height: 1.62;
+  color: var(--ink-2);
+  max-width: 62ch;
+}
+
+.meta {
+  font-size: var(--t-meta);
+  font-weight: 500;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.num {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* --------------------------------------------------------------- sections */
+
+.section {
+  margin-top: 26px;
+}
+.section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  margin-bottom: var(--sp-5);
+  padding: 0 var(--sp-1);
+}
+
+/* ------------------------------------------------------------------ cards */
+
+.card {
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  padding: var(--sp-8);
+  box-shadow: var(--sh-1);
+}
+.card--tint {
+  background: linear-gradient(135deg, var(--tint) 0%, var(--surface) 78%);
+}
+.card--quiet {
+  background: color-mix(in srgb, var(--surface) 62%, transparent);
+  box-shadow: none;
+  border: 1px solid var(--line);
+}
+
+.hero {
+  border-radius: var(--r-2xl);
+  padding: var(--sp-9);
+  background: var(--grad-hero);
+  box-shadow: var(--sh-1);
+  position: relative;
+  overflow: hidden;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  right: -64px;
+  top: -72px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 34%, rgba(255, 255, 255, 0.85), transparent 68%);
+  pointer-events: none;
+}
+/* The white highlight would blow out on a dark ground. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .hero::after {
+    background: radial-gradient(circle at 34% 34%, rgba(255, 255, 255, 0.07), transparent 68%);
+  }
+}
+:root[data-theme='dark'] .hero::after {
+  background: radial-gradient(circle at 34% 34%, rgba(255, 255, 255, 0.07), transparent 68%);
+}
+
+/* A list is one object, not a stack of boxes. */
+.group {
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--sh-1);
+  overflow: hidden;
+}
+.group > * + * {
+  border-top: 1px solid var(--line);
+}
+
+/* ---------------------------------------------------------------- rows */
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-6);
+  padding: var(--sp-6) var(--sp-7);
+  min-height: 56px;
+  background: transparent;
+  border: 0;
+  width: 100%;
+  text-align: left;
+  transition: background var(--dur-base) var(--ease);
+}
+.row--done {
+  background: var(--surface-2);
+}
+.row--center {
+  align-items: center;
+}
+.row__body {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+.row__title {
+  display: block;
+  font-size: var(--t-body-lg);
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  transition: color var(--dur-base) var(--ease);
+  overflow-wrap: anywhere;
+}
+.row--done .row__title {
+  color: var(--ink-3);
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 2px;
+}
+.row__chevron {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  color: var(--ink-3);
+}
+
+/* ------------------------------------------------------------- checkbox */
+
+.check {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: -9px -9px -9px -10px; /* 25px visual, 44px target */
+  background: none;
+  border: 0;
+  padding: 0;
+}
+.check__box {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  border: 2px solid var(--tint);
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+  transition:
+    background var(--dur-base) var(--ease),
+    border-color var(--dur-base) var(--ease),
+    transform var(--dur-quick) var(--ease);
+}
+.check:active .check__box {
+  transform: scale(0.88);
+}
+.check__box svg {
+  width: 12px;
+  height: 12px;
+  overflow: visible;
+}
+.check__box path {
+  fill: none;
+  stroke: var(--surface);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 16;
+  stroke-dashoffset: 16;
+  transition: stroke-dashoffset 190ms var(--ease) 70ms;
+}
+.check[aria-checked='true'] .check__box {
+  background: var(--deep);
+  border-color: var(--deep);
+  /* The one overshoot in the app, reserved for completion. */
+  animation: check-pop 360ms var(--ease-pop);
+}
+.check[aria-checked='true'] .check__box path {
+  stroke-dashoffset: 0;
+}
+@keyframes check-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+/* ----------------------------------------------------------------- pills */
+
+.pills {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: var(--sp-3);
+}
+.pill {
+  font-size: var(--t-pill);
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: var(--r-pill);
+  background: var(--tint);
+  color: var(--deep);
+  white-space: nowrap;
+}
+.pill--plain {
+  background: var(--ink-wash);
+  color: var(--ink-2);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pill--attention {
+  background: var(--attention-bg);
+  color: var(--attention);
+}
+.pill--ghost {
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  color: var(--ink-2);
+}
+.star {
+  color: var(--other-d);
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* ------------------------------------------------------------------ ring */
+
+.ring {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.ring svg {
+  display: block;
+  transform: rotate(-90deg);
+}
+.ring__track {
+  fill: none;
+  stroke: var(--ink-wash-2);
+}
+.ring__fill {
+  fill: none;
+  stroke: var(--deep);
+  stroke-linecap: round;
+  transition: stroke-dashoffset var(--dur-measure) var(--ease);
+}
+.ring__label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--deep);
+  line-height: 1;
+}
+
+/* ------------------------------------------------------------------ bars */
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-2);
+  height: 96px;
+  margin-top: var(--sp-5);
+}
+.bars__col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--sp-3);
+  height: 100%;
+}
+.bars__bar {
+  display: block;
+  width: 100%;
+  border-radius: var(--r-xs);
+  background: var(--ink-wash-2);
+  transition: height var(--dur-measure) var(--ease);
+}
+.bars__col--hi .bars__bar {
+  background: var(--deep);
+}
+.bars__tick {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+.bars__col--hi .bars__tick {
+  color: var(--deep);
+}
+
+/* ------------------------------------------------------------- day strip */
+
+.days {
+  display: flex;
+  gap: var(--sp-2);
+  margin-top: var(--sp-7);
+}
+.dayChip {
+  flex: 1;
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-md);
+  padding: var(--sp-4) 0 9px;
+  color: var(--ink-3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  min-height: 62px;
+  box-shadow: var(--sh-1);
+  transition:
+    background var(--dur-base) var(--ease),
+    color var(--dur-base) var(--ease),
+    transform var(--dur-base) var(--ease);
+}
+.dayChip__letter {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.dayChip__num {
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.dayChip__load {
+  width: 16px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--ink-wash-2);
+  overflow: hidden;
+  position: relative;
+}
+.dayChip__load i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--deep);
+  transition: width var(--dur-slow) var(--ease);
+}
+.dayChip--today {
+  color: var(--work-d);
+}
+.dayChip--sel {
+  background: var(--ink);
+  border-color: var(--ink);
+  /* --ground reads correctly against --ink in both themes. */
+  color: var(--ground);
+  transform: translateY(-2px);
+}
+.dayChip--sel .dayChip__load {
+  background: color-mix(in srgb, var(--ground) 30%, transparent);
+}
+.dayChip--sel .dayChip__load i {
+  background: var(--ground);
+}
+
+/* ------------------------------------------------------------ habit dots */
+
+.dots {
+  display: flex;
+  gap: var(--sp-2);
+}
+.dot {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  background: none;
+  border: 0;
+}
+.dot__box {
+  width: 26px;
+  height: 26px;
+  border-radius: 9px;
+  border: 2px solid var(--ink-wash-2);
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+  transition:
+    background var(--dur-base) var(--ease),
+    border-color var(--dur-base) var(--ease),
+    transform var(--dur-base) var(--ease);
+}
+.dot__box svg {
+  width: 11px;
+  height: 11px;
+  fill: none;
+  stroke: var(--surface);
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease);
+}
+.dot--done .dot__box {
+  background: var(--deep);
+  border-color: var(--deep);
+}
+.dot--done .dot__box svg {
+  opacity: 1;
+}
+.dot--today .dot__box {
+  border-style: dashed;
+  border-color: var(--deep);
+}
+.dot--done.dot--today .dot__box {
+  border-style: solid;
+}
+.dot--off .dot__box {
+  border-style: dotted;
+  opacity: 0.45;
+}
+.dot--done .dot__box {
+  animation: check-pop 360ms var(--ease-pop);
+}
+.dot--lg .dot__box {
+  width: 32px;
+  height: 32px;
+  border-radius: 11px;
+}
+.dot--sm {
+  width: 22px;
+  height: 22px;
+}
+.dot--sm .dot__box {
+  width: 10px;
+  height: 10px;
+  border-radius: 4px;
+  border-width: 1.5px;
+}
+.dot--sm .dot__box svg {
+  display: none;
+}
+
+/* -------------------------------------------------------------- controls */
+
+.btn {
+  width: 100%;
+  padding: var(--sp-7);
+  background: var(--ink);
+  color: var(--ground);
+  border: 0;
+  border-radius: var(--r-lg);
+  font-size: var(--t-body-lg);
+  font-weight: 700;
+  transition:
+    transform var(--dur-quick) var(--ease),
+    opacity var(--dur-quick) var(--ease);
+}
+.btn:active {
+  transform: scale(0.985);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.btn--ghost {
+  background: var(--ink-wash);
+  color: var(--ink);
+}
+.btn--danger {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+.btn + .btn {
+  margin-top: var(--sp-4);
+}
+
+.field {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: var(--r-md);
+  /* 16px is not negotiable — anything smaller makes mobile browsers zoom on focus. */
+  font-size: 16px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--ink);
+  padding: var(--sp-6) var(--sp-7);
+  outline: none;
+  transition:
+    border-color var(--dur-quick) var(--ease),
+    box-shadow var(--dur-quick) var(--ease);
+}
+.field::placeholder {
+  color: var(--ink-3);
+  font-weight: 400;
+}
+.field:focus {
+  border-color: var(--deep);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--deep) 16%, transparent);
+}
+textarea.field {
+  resize: none;
+  line-height: 1.5;
+}
+
+.chips {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-top: var(--sp-4);
+}
+.chip {
+  padding: 9px var(--sp-6);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  min-height: 38px;
+  transition: all var(--dur-quick) var(--ease);
+}
+.chip--on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--ground);
+}
+.chip--area.chip--on {
+  background: var(--deep);
+  border-color: var(--deep);
+  color: var(--surface);
+}
+
+.seg {
+  display: flex;
+  background: var(--ink-wash);
+  border-radius: var(--r-md);
+  padding: var(--sp-1);
+  margin-top: var(--sp-7);
+}
+.seg button {
+  flex: 1;
+  padding: 9px;
+  background: none;
+  border: 0;
+  border-radius: var(--r-sm);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-3);
+  transition: all var(--dur-base) var(--ease);
+}
+.seg button[aria-selected='true'] {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--sh-1);
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  border: 1px solid var(--glass-border);
+  padding: 9px var(--sp-6) 9px var(--sp-4);
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  margin-bottom: var(--sp-7);
+  box-shadow: var(--sh-1);
+  min-height: 38px;
+}
+.backBtn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* -------------------------------------------------------------------- nav */
+
+.nav {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: calc(22px + var(--safe-bottom));
+  height: 66px;
+  z-index: 6;
+  border-radius: var(--r-xl);
+  background: var(--glass);
+  backdrop-filter: blur(22px) saturate(1.5);
+  -webkit-backdrop-filter: blur(22px) saturate(1.5);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--sh-nav);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--sp-2);
+}
+.nav__tab {
+  flex: 1;
+  background: none;
+  border: 0;
+  color: var(--ink-3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: var(--sp-3) 0;
+  min-height: 52px;
+  transition: color var(--dur-base) var(--ease);
+}
+.nav__tab svg {
+  width: 21px;
+  height: 21px;
+  transition: transform var(--dur-base) var(--ease-out);
+  /* The button is the tap target, never the glyph inside it. */
+  pointer-events: none;
+}
+.nav__tab span {
+  font-size: 9.5px;
+  font-weight: 700;
+}
+.nav__tab[aria-current='page'] {
+  color: var(--ink);
+}
+.nav__tab[aria-current='page'] svg {
+  transform: translateY(-1px) scale(1.06);
+}
+.nav__create {
+  flex: none;
+  width: 62px;
+  display: grid;
+  place-items: center;
+}
+.nav__createBtn {
+  width: 50px;
+  height: 50px;
+  border-radius: var(--r-lg);
+  border: 0;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  background: var(--grad-action);
+  box-shadow: 0 5px 14px -3px rgba(94, 109, 180, 0.6);
+  transition: transform var(--dur-base) var(--ease-pop);
+}
+.nav__createBtn:active {
+  transform: scale(0.92);
+}
+.nav__createBtn svg {
+  width: 21px;
+  height: 21px;
+  transition: transform var(--dur-base) var(--ease);
+  pointer-events: none;
+}
+.nav__createBtn[aria-expanded='true'] svg {
+  transform: rotate(135deg);
+}
+
+/* ----------------------------------------------------------------- sheet */
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(30, 36, 56, 0.32);
+  opacity: 0;
+  z-index: 8;
+  border: 0;
+  padding: 0;
+  width: 100%;
+  animation: scrim-in var(--dur-base) var(--ease) forwards;
+}
+@keyframes scrim-in {
+  to { opacity: 1; }
+}
+.scrim--out {
+  animation: scrim-out 200ms var(--ease-in) forwards;
+}
+@keyframes scrim-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--glass);
+  backdrop-filter: blur(26px) saturate(1.4);
+  -webkit-backdrop-filter: blur(26px) saturate(1.4);
+  border-top: 1px solid var(--glass-border);
+  border-radius: var(--r-3xl) var(--r-3xl) 0 0;
+  z-index: 9;
+  padding: 11px var(--gutter) calc(var(--sp-10) + var(--safe-bottom));
+  box-shadow: var(--sh-nav);
+  max-height: 84%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: sheet-in var(--dur-sheet) var(--ease-out) backwards;
+}
+@keyframes sheet-in {
+  from { transform: translateY(101%); }
+}
+.sheet--out {
+  animation: sheet-out 220ms var(--ease-in) forwards;
+}
+@keyframes sheet-out {
+  to { transform: translateY(101%); }
+}
+.sheet__grab {
+  width: 38px;
+  height: 4px;
+  border-radius: 3px;
+  background: var(--ink-wash-2);
+  margin: 0 auto var(--sp-7);
+}
+
+.optionCard {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  width: 100%;
+  border: 0;
+  text-align: left;
+  border-radius: var(--r-xl);
+  padding: var(--sp-7);
+  margin-bottom: 9px;
+  box-shadow: var(--sh-1);
+  background: linear-gradient(135deg, var(--tint) 0%, var(--surface) 80%);
+  transition: transform var(--dur-quick) var(--ease);
+}
+.optionCard:active {
+  transform: scale(0.98);
+}
+.optionCard__icon {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  display: grid;
+  place-items: center;
+  color: var(--deep);
+}
+.optionCard__icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+/* ----------------------------------------------------------------- toast */
+
+.toast {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: calc(104px + var(--safe-bottom));
+  background: var(--ink);
+  color: var(--ground);
+  padding: var(--sp-6) var(--sp-8);
+  border-radius: var(--r-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  z-index: 7;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: var(--sh-2);
+  animation: toast-in var(--dur-sheet) var(--ease-out) backwards;
+}
+@keyframes toast-in {
+  from {
+    transform: translateY(calc(100% + 130px));
+    opacity: 0;
+  }
+}
+.toast--out {
+  animation: toast-out 220ms var(--ease-in) forwards;
+}
+@keyframes toast-out {
+  to {
+    transform: translateY(calc(100% + 130px));
+    opacity: 0;
+  }
+}
+.toast--error {
+  background: var(--danger);
+  color: #fff;
+}
+.toast button {
+  background: rgba(255, 255, 255, 0.18);
+  border: 0;
+  color: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 8px var(--sp-5);
+  border-radius: var(--r-pill);
+  flex: none;
+  min-height: 32px;
+}
+
+/* ---------------------------------------------------------- empty states */
+
+.empty {
+  border-radius: var(--r-xl);
+  padding: var(--sp-9) var(--sp-8);
+  background: color-mix(in srgb, var(--surface) 66%, transparent);
+  border: 1px dashed var(--ink-wash-2);
+  text-align: center;
+}
+.empty__title {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--t-d4);
+  font-weight: 500;
+  color: var(--ink);
+}
+.empty__body {
+  display: block;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  margin-top: var(--sp-2);
+  line-height: 1.55;
+  max-width: 34ch;
+  margin-inline: auto;
+}
+.empty .btn {
+  width: auto;
+  padding: var(--sp-4) var(--sp-8);
+  margin-top: var(--sp-7);
+  font-size: 13px;
+}
+
+/* --------------------------------------------------------------- habits */
+
+.habitStrip {
+  display: flex;
+  gap: var(--sp-4);
+  overflow-x: auto;
+  padding: 2px var(--gutter) var(--sp-2);
+  margin: 0 calc(var(--gutter) * -1);
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+.habitStrip::-webkit-scrollbar {
+  display: none;
+}
+.habitTile {
+  flex: none;
+  width: 116px;
+  scroll-snap-align: start;
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--r-xl);
+  padding: var(--sp-6) var(--sp-6) var(--sp-7);
+  box-shadow: var(--sh-1);
+  text-align: left;
+  transition: transform var(--dur-quick) var(--ease);
+}
+.habitTile:active {
+  transform: scale(0.97);
+}
+.habitTile__name {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-top: 11px;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+.habitTile__meta {
+  display: block;
+  font-size: 10.5px;
+  color: var(--ink-3);
+  font-weight: 500;
+  margin-top: var(--sp-1);
+}
+
+/* ---------------------------------------------------------------- goals */
+
+.goalCard {
+  display: flex;
+  gap: var(--sp-7);
+  align-items: center;
+  width: 100%;
+  border: 0;
+  text-align: left;
+  border-radius: var(--r-xl);
+  padding: var(--sp-7);
+  margin-bottom: var(--sp-4);
+  box-shadow: var(--sh-1);
+  background: linear-gradient(135deg, var(--tint) 0%, var(--surface) 78%);
+  transition: transform var(--dur-quick) var(--ease);
+}
+.goalCard:active {
+  transform: scale(0.985);
+}
+.goalCard__title {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 1.18;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------- insights */
+
+.insight + .insight {
+  margin-top: var(--sp-5);
+}
+.insight__headline {
+  font-family: var(--font-display);
+  font-size: var(--t-d2);
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.018em;
+  text-wrap: balance;
+  color: var(--ink);
+}
+.reviewSection + .reviewSection {
+  margin-top: var(--sp-8);
+}
+
+/* ------------------------------------------------------- reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 1ms !important;
+  }
+}

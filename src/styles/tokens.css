@@ -1,0 +1,226 @@
+/* WeekFlow 2.0 design tokens — the implementation of docs/02-design-system.md.
+   Nothing in the app names a colour, duration or radius directly; it all comes
+   from here, so both themes stay in step. */
+
+:root {
+  /* ---------------------------------------------------------- neutrals */
+  --ground: #f5f7fc;
+  --surface: #ffffff;
+  --surface-2: #fbfcfe;
+  --glass: rgba(255, 255, 255, 0.74);
+  --glass-border: rgba(255, 255, 255, 0.85);
+  --ink: #242a38;
+  --ink-2: #5d6579;
+  --ink-3: #949bad;
+  --line: #e8ecf5;
+  --ink-wash: rgba(36, 42, 56, 0.055);
+  --ink-wash-2: rgba(36, 42, 56, 0.1);
+
+  /* ------------------------------------------------------- life areas */
+  --work: #cfe0f7;
+  --work-d: #41669f;
+  --health: #c9e9da;
+  --health-d: #2f7a62;
+  --learning: #dcd6f3;
+  --learning-d: #5e4f9e;
+  --personal: #f8d5da;
+  --personal-d: #a8566a;
+  --other: #f8e6b9;
+  --other-d: #8a6b26;
+
+  /* Default area context; [data-area] overrides it per subtree. */
+  --tint: var(--work);
+  --deep: var(--work-d);
+
+  /* --------------------------------------------------------- semantic */
+  --attention: #a85c2c;
+  --attention-bg: #fbe6d8;
+  --danger: #ad3b3b;
+  --danger-bg: rgba(173, 59, 59, 0.09);
+  --positive: #2f7a62;
+
+  /* ------------------------------------------------------------ scale */
+  --sp-1: 4px;
+  --sp-2: 6px;
+  --sp-3: 8px;
+  --sp-4: 10px;
+  --sp-5: 12px;
+  --sp-6: 14px;
+  --sp-7: 16px;
+  --sp-8: 20px;
+  --sp-9: 24px;
+  --sp-10: 32px;
+  --sp-11: 40px;
+  --gutter: 20px;
+
+  --r-xs: 8px;
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-lg: 20px;
+  --r-xl: 24px;
+  --r-2xl: 30px;
+  --r-3xl: 32px;
+  --r-pill: 999px;
+
+  --sh-1: 0 1px 2px rgba(36, 42, 56, 0.04), 0 8px 22px -8px rgba(36, 42, 56, 0.1);
+  --sh-2: 0 2px 6px rgba(36, 42, 56, 0.05), 0 22px 44px -16px rgba(36, 42, 56, 0.18);
+  --sh-nav: 0 3px 10px rgba(36, 42, 56, 0.07), 0 18px 40px -12px rgba(36, 42, 56, 0.28);
+
+  /* -------------------------------------------------------- gradients */
+  /* The only two gradients in the app. */
+  --grad-hero: linear-gradient(150deg, #e3ecfb 0%, #eae5f8 52%, #dff0e8 100%);
+  --grad-action: linear-gradient(145deg, #5e82c4, #7c6bb6);
+
+  /* ------------------------------------------------------------- type */
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    sans-serif;
+
+  --t-d1: 29px;
+  --t-d2: 25px;
+  --t-d3: 20px;
+  --t-d4: 18px;
+  --t-body-lg: 14.5px;
+  --t-body: 13.5px;
+  --t-label: 11.5px;
+  --t-meta: 11.5px;
+  --t-pill: 10.5px;
+
+  /* ----------------------------------------------------------- motion */
+  --dur-quick: 140ms;
+  --dur-base: 260ms;
+  --dur-slow: 420ms;
+  --dur-sheet: 360ms;
+  --dur-measure: 700ms;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-in: cubic-bezier(0.3, 0, 1, 1);
+  --ease-pop: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  /* Safe areas, so the app can paint edge to edge. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  color-scheme: light;
+}
+
+/* Area context. Any subtree can declare which part of life it is about. */
+[data-area='Work'] {
+  --tint: var(--work);
+  --deep: var(--work-d);
+}
+[data-area='Health'] {
+  --tint: var(--health);
+  --deep: var(--health-d);
+}
+[data-area='Learning'] {
+  --tint: var(--learning);
+  --deep: var(--learning-d);
+}
+[data-area='Personal'] {
+  --tint: var(--personal);
+  --deep: var(--personal-d);
+}
+[data-area='Other'] {
+  --tint: var(--other);
+  --deep: var(--other-d);
+}
+
+/* ------------------------------------------------------------------ dark
+   Only tokens are redefined — no component ever styles itself inside a theme
+   block, which is what keeps the two themes from drifting apart.
+   Both the media query (system setting) and the attribute (explicit choice)
+   are covered, and the media query yields to an explicit light choice. */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --ground: #12141a;
+    --surface: #1a1d26;
+    --surface-2: #171a22;
+    --glass: rgba(26, 29, 38, 0.74);
+    --glass-border: rgba(255, 255, 255, 0.07);
+    --ink: #e8eaf0;
+    --ink-2: #a2a9ba;
+    --ink-3: #6e7689;
+    --line: #2a2f3c;
+    --ink-wash: rgba(255, 255, 255, 0.06);
+    --ink-wash-2: rgba(255, 255, 255, 0.11);
+
+    --work: rgba(102, 150, 220, 0.22);
+    --work-d: #8fb4e8;
+    --health: rgba(60, 160, 128, 0.22);
+    --health-d: #7fd3b4;
+    --learning: rgba(130, 112, 210, 0.24);
+    --learning-d: #b3a5ee;
+    --personal: rgba(210, 120, 145, 0.22);
+    --personal-d: #eda0b0;
+    --other: rgba(190, 150, 60, 0.22);
+    --other-d: #dfc079;
+
+    --attention: #e0a06a;
+    --attention-bg: rgba(224, 160, 106, 0.16);
+    --danger: #f08a8a;
+    --danger-bg: rgba(240, 138, 138, 0.14);
+    --positive: #7fd3b4;
+
+    /* Shadows do little work on a dark ground; surfaces separate by lightness. */
+    --sh-1: 0 1px 2px rgba(0, 0, 0, 0.24), 0 8px 22px -10px rgba(0, 0, 0, 0.4);
+    --sh-2: 0 2px 6px rgba(0, 0, 0, 0.3), 0 22px 44px -18px rgba(0, 0, 0, 0.55);
+    --sh-nav: 0 3px 10px rgba(0, 0, 0, 0.3), 0 18px 40px -14px rgba(0, 0, 0, 0.6);
+
+    --grad-hero: linear-gradient(150deg, #1d2534 0%, #241f36 52%, #1a2a26 100%);
+    --grad-action: linear-gradient(145deg, #4d6ba6, #6a5b9c);
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --ground: #12141a;
+  --surface: #1a1d26;
+  --surface-2: #171a22;
+  --glass: rgba(26, 29, 38, 0.74);
+  --glass-border: rgba(255, 255, 255, 0.07);
+  --ink: #e8eaf0;
+  --ink-2: #a2a9ba;
+  --ink-3: #6e7689;
+  --line: #2a2f3c;
+  --ink-wash: rgba(255, 255, 255, 0.06);
+  --ink-wash-2: rgba(255, 255, 255, 0.11);
+
+  --work: rgba(102, 150, 220, 0.22);
+  --work-d: #8fb4e8;
+  --health: rgba(60, 160, 128, 0.22);
+  --health-d: #7fd3b4;
+  --learning: rgba(130, 112, 210, 0.24);
+  --learning-d: #b3a5ee;
+  --personal: rgba(210, 120, 145, 0.22);
+  --personal-d: #eda0b0;
+  --other: rgba(190, 150, 60, 0.22);
+  --other-d: #dfc079;
+
+  --attention: #e0a06a;
+  --attention-bg: rgba(224, 160, 106, 0.16);
+  --danger: #f08a8a;
+  --danger-bg: rgba(240, 138, 138, 0.14);
+  --positive: #7fd3b4;
+
+  --sh-1: 0 1px 2px rgba(0, 0, 0, 0.24), 0 8px 22px -10px rgba(0, 0, 0, 0.4);
+  --sh-2: 0 2px 6px rgba(0, 0, 0, 0.3), 0 22px 44px -18px rgba(0, 0, 0, 0.55);
+  --sh-nav: 0 3px 10px rgba(0, 0, 0, 0.3), 0 18px 40px -14px rgba(0, 0, 0, 0.6);
+
+  --grad-hero: linear-gradient(150deg, #1d2534 0%, #241f36 52%, #1a2a26 100%);
+  --grad-action: linear-gradient(145deg, #4d6ba6, #6a5b9c);
+
+  color-scheme: dark;
+}
+
+/* Small phones: step the display sizes down. Nothing else changes. */
+@media (max-width: 359px) {
+  :root {
+    --t-d1: 25px;
+    --t-d2: 22px;
+    --t-d3: 18px;
+    --gutter: 16px;
+  }
+}

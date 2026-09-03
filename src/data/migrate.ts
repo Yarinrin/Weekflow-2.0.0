@@ -11,7 +11,7 @@
  *
  * See docs/01-product-architecture.md §6 for the mapping table.
  */
-import { addDays, isDateKey, startOfWeek } from '@/domain/dates';
+import { addDays, formatShort, isDateKey, startOfWeek } from '@/domain/dates';
 import { isArea } from '@/domain/types';
 import type {
   Area,
@@ -290,7 +290,7 @@ export function buildMigration(storage: Storage, weekStartsOn: DayIndex = 0): Mi
         const goal: Goal = {
           id: newId('goa'),
           title: text,
-          description: `Carried over from your week of ${weekKey}.`,
+          description: `Carried over from your week of ${formatShort(weekKey)}.`,
           area: 'Personal',
           deadline: addDays(weekKey, 6),
           progressMode: 'milestones',

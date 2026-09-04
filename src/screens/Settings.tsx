@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ChipGroup, Section, Sheet } from '@/ui/components';
 import { ChevronRight } from '@/ui/Icons';
 import { repo } from '@/data/db';
+import { ImportError, parseImport, type ImportOutcome } from '@/data/importer';
 import { BACKUP_KEY } from '@/data/migrate';
 import { DAY_NAMES } from '@/domain/dates';
 import type { DayIndex } from '@/domain/types';
@@ -341,6 +342,26 @@ function AIPanel({ onClose }: { onClose: () => void }) {
 function DataPanel({ onClose }: { onClose: () => void }) {
   const store = useStore();
   const [confirmReset, setConfirmReset] = useState(false);
+  const [pending, setPending] = useState<ImportOutcome | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const hasData = store.tasks.length + store.habits.length + store.goals.length > 0;
+
+  const chooseFile = async (file: File | undefined) => {
+    setImportError(null);
+    setPending(null);
+    if (!file) return;
+    try {
+      const text = await file.text();
+      setPending(parseImport(text, store.settings.weekStartsOn));
+    } catch (err) {
+      setImportError(
+        err instanceof ImportError
+          ? err.message
+          : 'That file could not be read. Try exporting it again.',
+      );
+    }
+  };
   const hasBackup = typeof localStorage !== 'undefined' && localStorage.getItem(BACKUP_KEY) !== null;
 
   const exportData = async () => {
@@ -381,6 +402,74 @@ function DataPanel({ onClose }: { onClose: () => void }) {
       <button type="button" className="btn" onClick={() => void exportData()}>
         Export everything as JSON
       </button>
+
+      {/* Import. The automatic migration only sees WeekFlow 1.0 data sitting on the
+          same origin, which the Android app never does — so a file is the way in. */}
+      <input
+        ref={fileRef}
+        type="file"
+        accept="application/json,.json"
+        className="sr-only"
+        onChange={(e) => void chooseFile(e.target.files?.[0])}
+      />
+      <button
+        type="button"
+        className="btn btn--ghost"
+        onClick={() => {
+          setPending(null);
+          setImportError(null);
+          fileRef.current?.click();
+        }}
+      >
+        Import from a file
+      </button>
+      <p className="meta" style={{ marginTop: 'var(--sp-4)', lineHeight: 1.5 }}>
+        Takes a WeekFlow 1.0 export or a WeekFlow 2.0 backup.
+      </p>
+
+      {importError && (
+        <p className="body" style={{ marginTop: 'var(--sp-6)', color: 'var(--danger)' }} role="alert">
+          {importError}
+        </p>
+      )}
+
+      {pending && (
+        <div className="card card--tint" data-area="Learning" style={{ marginTop: 'var(--sp-7)' }}>
+          <h3 className="label" style={{ color: 'var(--deep)' }}>
+            Ready to import
+          </h3>
+          <p className="body" style={{ marginTop: 'var(--sp-4)', color: 'var(--ink)' }}>
+            {pending.summary}
+          </p>
+          {pending.report?.notes.map((note, i) => (
+            <p key={i} className="body" style={{ marginTop: 'var(--sp-4)' }}>
+              {note}
+            </p>
+          ))}
+          {hasData && (
+            <p className="body" style={{ marginTop: 'var(--sp-5)', color: 'var(--attention)' }}>
+              This replaces everything currently in WeekFlow on this device. Export first if you
+              want to keep it.
+            </p>
+          )}
+          <button
+            type="button"
+            className="btn"
+            onClick={() => {
+              void store.importData(pending).then(() => {
+                store.toast('Your data is in');
+                setPending(null);
+                onClose();
+              });
+            }}
+          >
+            {hasData ? 'Replace everything with this' : 'Import it'}
+          </button>
+          <button type="button" className="btn btn--ghost" onClick={() => setPending(null)}>
+            Cancel
+          </button>
+        </div>
+      )}
 
       {hasBackup && (
         <p className="meta" style={{ marginTop: 'var(--sp-6)', lineHeight: 1.5 }}>

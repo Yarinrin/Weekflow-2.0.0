@@ -16,6 +16,7 @@ import {
   type ReactNode,
 } from 'react';
 import { repo, StorageError } from '@/data/db';
+import type { ImportOutcome } from '@/data/importer';
 import { backupV1, buildMigration, hasV1Data, type MigrationResult } from '@/data/migrate';
 import { startOfWeek, todayKey } from '@/domain/dates';
 import { requestPermission } from '@/services/notifications';
@@ -203,6 +204,8 @@ export interface Store extends State {
   dismissMigration(): void;
   /** Marks the first run done, so Welcome is never shown again. */
   completeWelcome(): Promise<void>;
+  /** Replaces everything with an imported file. Destructive by design — the UI confirms first. */
+  importData(outcome: ImportOutcome): Promise<void>;
   weekOf(date: DateKey): Week | undefined;
 }
 
@@ -243,6 +246,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             });
             if (result.name) settings = { ...settings, name: result.name };
             await repo.setSettings(settings);
+            // True only on this path: backupV1 above wrote a verbatim copy.
+            result.report.notes.push(
+              'A full backup of it was saved on this device before anything changed.',
+            );
             migrationReport = result.report;
           }
           await repo.setMeta('migratedV1', true);
@@ -678,6 +685,47 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       toast,
       dismissToast: (id) => dispatch({ type: 'dismissToast', id }),
       dismissMigration: () => dispatch({ type: 'clearMigration' }),
+
+      async importData(outcome) {
+        const before = {
+          tasks: ref.current.tasks,
+          habits: ref.current.habits,
+          completions: ref.current.completions,
+          goals: ref.current.goals,
+          milestones: ref.current.milestones,
+          weeks: ref.current.weeks,
+        };
+        const next = outcome.data;
+        await write(
+          () => {
+            dispatch({ type: 'tasks', tasks: next.tasks });
+            dispatch({ type: 'habits', habits: next.habits });
+            dispatch({ type: 'completions', completions: next.completions });
+            dispatch({ type: 'goals', goals: next.goals });
+            dispatch({ type: 'milestones', milestones: next.milestones });
+            dispatch({ type: 'weeks', weeks: next.weeks });
+          },
+          () => {
+            dispatch({ type: 'tasks', tasks: before.tasks });
+            dispatch({ type: 'habits', habits: before.habits });
+            dispatch({ type: 'completions', completions: before.completions });
+            dispatch({ type: 'goals', goals: before.goals });
+            dispatch({ type: 'milestones', milestones: before.milestones });
+            dispatch({ type: 'weeks', weeks: before.weeks });
+          },
+          async () => {
+            await repo.replaceAll(next);
+            if (outcome.name) {
+              const settings = { ...ref.current.settings, name: outcome.name };
+              dispatch({ type: 'settings', settings });
+              await repo.setSettings(settings);
+            }
+            // An import counts as having been through the front door.
+            await repo.setMeta('welcomed', true);
+          },
+        );
+        dispatch({ type: 'welcomed' });
+      },
 
       async completeWelcome() {
         dispatch({ type: 'welcomed' });

@@ -22,7 +22,8 @@ GOAL            months        what I'm working toward
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 50 unit tests
+npm test             # 114 unit tests
+npm run a11y         # contrast + touch targets, both themes, against the built app
 npm run build        # production web bundle
 ```
 
@@ -53,7 +54,7 @@ For a Play Store build you need a signing key. Generate one with `keytool`, add 
 
 ```
 src/domain/      Pure logic — dates, habit scheduling, statistics, insights. Unit tested.
-src/data/        Dexie repository and the WeekFlow 1.0 migration.
+src/data/        Dexie repository, the WeekFlow 1.0 migration, and file import.
 src/store/       Application state; optimistic writes that roll back on storage failure.
 src/ui/          Shared components, icons, sheets.
 src/screens/     Home, Week, Goals, Goal detail, Habit detail, Review, Settings.
@@ -76,7 +77,20 @@ titles, notes, or your name. See [`server/relay.md`](server/relay.md).
 
 ## Upgrading from WeekFlow 1.0
 
-The migration runs once, on first launch, and **never deletes the old data**. Before
+**Two paths, because `localStorage` belongs to one origin on one device.**
+
+*Same browser* — open WeekFlow 2.0 where you used 1.0 and the migration runs by itself
+at first launch.
+
+*Anywhere else, the Android app included* — its storage is a separate sandbox, so there
+is nothing for the automatic path to find. Export a file from 1.0 and import it:
+**Settings → Your data → Import from a file**. Step-by-step, with the console snippet, in
+[`docs/03-exporting-from-weekflow-1.md`](docs/03-exporting-from-weekflow-1.md).
+
+Both paths run the same migration code, so they behave identically. The import shows you
+what it found and waits for confirmation before writing anything.
+
+The migration **never deletes the old data**. Before
 anything is transformed it writes a verbatim copy of `wf-clean-v2`, `wf-templates-v1` and
 `wf-name` to `wf2-legacy-backup`; the originals stay where they are.
 

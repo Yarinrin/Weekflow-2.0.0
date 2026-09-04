@@ -348,8 +348,9 @@ export function buildMigration(storage: Storage, weekStartsOn: DayIndex = 0): Mi
   /* ---- 4. Notes the user should actually see. ---------------------------- */
   const r = result.report;
   if (r.habitsImported > 0) {
+    const one = r.habitsImported === 1;
     r.notes.push(
-      `${r.habitsImported} recurring task${r.habitsImported === 1 ? '' : 's'} became habits, ` +
+      `${r.habitsImported} recurring task${one ? '' : 's'} became ${one ? 'a habit' : 'habits'}, ` +
         `with ${r.habitCompletionsRecovered} past completion${
           r.habitCompletionsRecovered === 1 ? '' : 's'
         } recovered from your old weeks.`,
@@ -371,15 +372,16 @@ export function buildMigration(storage: Storage, weekStartsOn: DayIndex = 0): Mi
     );
   }
   if (r.reviewsImported > 0) {
+    const one = r.reviewsImported === 1;
     r.notes.push(
-      `${r.reviewsImported} weekly review${r.reviewsImported === 1 ? '' : 's'} were kept as ` +
+      `${r.reviewsImported} weekly review${one ? '' : 's'} ${one ? 'was' : 'were'} kept as ` +
         `written. Old reviews were a single paragraph, so they appear without the four sections.`,
     );
   }
   if (r.skipped > 0) {
     r.notes.push(`${r.skipped} incomplete record${r.skipped === 1 ? '' : 's'} could not be read and were skipped.`);
   }
-  r.notes.push('Your old data is untouched, and a full backup was saved before anything changed.');
+  r.notes.push('Your WeekFlow 1.0 data is untouched. Nothing was deleted.');
 
   return result;
 }

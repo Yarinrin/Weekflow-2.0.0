@@ -168,8 +168,8 @@ p {
 
 .display {
   font-family: var(--font-display);
-  font-weight: 500;
-  letter-spacing: -0.018em;
+  font-weight: 400; /* Baskerville's regular is a proper book weight, not thin */
+  letter-spacing: -0.006em; /* Baskerville is a wider face than Fraunces was; less negative tracking */
   text-wrap: balance;
   margin: 0;
 }
@@ -1054,7 +1054,7 @@ textarea.field {
   display: block;
   font-family: var(--font-display);
   font-size: var(--t-d4);
-  font-weight: 500;
+  font-weight: 400;
   color: var(--ink);
 }
 .empty__body {
@@ -1142,9 +1142,9 @@ textarea.field {
   display: block;
   font-family: var(--font-display);
   font-size: 19px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.18;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.004em;
   color: var(--ink);
   overflow-wrap: anywhere;
 }
@@ -1157,9 +1157,9 @@ textarea.field {
 .insight__headline {
   font-family: var(--font-display);
   font-size: var(--t-d2);
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.15;
-  letter-spacing: -0.018em;
+  letter-spacing: -0.006em;
   text-wrap: balance;
   color: var(--ink);
 }

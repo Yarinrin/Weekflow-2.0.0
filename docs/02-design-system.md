@@ -98,19 +98,27 @@ Wednesday"; a completed task also has a filled check, a strikethrough, and a dim
 
 ## 2. Typography
 
-**Fraunces** for display — a soft, high-optical-contrast serif with real character.
-**Plus Jakarta Sans** for everything operational. Both variable, both from Google Fonts,
-both self-hosted in the app build so the app works offline.
+**Libre Baskerville** for display — a classical book serif, more literary and
+structured than a contemporary display face. **Plus Jakarta Sans** for everything
+operational. Both from Google Fonts, both self-hosted in the app build so the app works
+offline.
 
-The split is by *role*, not by size: Fraunces speaks (headings, the intention, review
-prose, goal and habit names), Plus Jakarta Sans works (tasks, labels, numbers, controls).
+Libre Baskerville ships only two weights, 400 and 700 — no in-between. Every display
+rule below uses one of those two on purpose; do not reach for 500/600 on this family,
+the browser will fake it and it will look wrong. Baskerville also sits wider than
+Fraunces did, so tracking on display type is looser (-0.006em instead of -0.018em) to
+avoid crowding.
+
+The split is by *role*, not by size: the display face speaks (headings, the intention,
+review prose, goal and habit names), Plus Jakarta Sans works (tasks, labels, numbers,
+controls).
 
 | Token | Family | Size / line | Weight | Use |
 | --- | --- | --- | --- | --- |
-| `--t-d1` | Fraunces | 29 / 1.10 | 500 | Screen heroes, greeting |
-| `--t-d2` | Fraunces | 25 / 1.15 | 500 | Review pull-quotes, insight statements |
-| `--t-d3` | Fraunces | 20 / 1.18 | 500 | Goal titles, sheet titles |
-| `--t-d4` | Fraunces | 18 / 1.22 | 500 | Card titles |
+| `--t-d1` | Libre Baskerville | 29 / 1.10 | 400 | Screen heroes, greeting |
+| `--t-d2` | Libre Baskerville | 25 / 1.15 | 400 | Review pull-quotes, insight statements |
+| `--t-d3` | Libre Baskerville | 20 / 1.18 | 400 | Goal titles, sheet titles |
+| `--t-d4` | Libre Baskerville | 18 / 1.22 | 400 | Card titles |
 | `--t-body-lg` | Jakarta | 14.5 / 1.50 | 600 | Task titles |
 | `--t-body` | Jakarta | 13.5 / 1.62 | 400 | Body copy |
 | `--t-label` | Jakarta | 11.5 / 1.2 | 700 | Section labels, uppercase, `.07em` |
@@ -122,9 +130,9 @@ Rules: headings get `text-wrap: balance`. Anywhere digits line up in a column,
 `font-variant-numeric: tabular-nums`. Body copy caps at ~62 characters. Display sizes
 scale down 1 step below 360px viewport width; nothing else changes.
 
-**Italic Fraunces is reserved for one thing:** the user's own words and the review's
-emotional line — the weekly intention, the name in the greeting, the review headline.
-It marks "this is about you", so it must not become decoration.
+**Italic display type is reserved for one thing:** the user's own words and the
+review's emotional line — the weekly intention, the name in the greeting, the review
+headline. It marks "this is about you", so it must not become decoration.
 
 ---
 
@@ -260,8 +268,8 @@ border and a 3px 13%-alpha ring. Sheets scroll the focused input above the keybo
 non-categorical metadata such as a linked goal name.
 
 ### Empty state
-Never "No data." A dashed `--line` border on a 66%-alpha surface, a Fraunces line naming
-what is missing, a sentence explaining why it might be worth adding, and a single action.
+Never "No data." A dashed `--line` border on a 66%-alpha surface, a display-serif line
+naming what is missing, a sentence explaining why it might be worth adding, and a single action.
 
 > **No goals yet.** — Choose something worth working toward. — *Add a goal*
 

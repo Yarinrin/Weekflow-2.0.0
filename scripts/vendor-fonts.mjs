@@ -20,10 +20,12 @@ const UA =
 
 const FAMILIES = [
   {
-    name: 'Fraunces',
-    // opsz is what gives Fraunces its character at display sizes.
-    query: 'Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400',
-    slug: 'fraunces',
+    // Libre Baskerville ships only regular and bold (plus their italics) — no
+    // variable-weight range like Fraunces had. app.css and Settings.tsx are tuned
+    // to 400/700 accordingly; see the comment in tokens.css next to --font-display.
+    name: 'Libre Baskerville',
+    query: 'Libre+Baskerville:ital,wght@0,400;0,700;1,400',
+    slug: 'librebaskerville',
   },
   {
     name: 'Plus Jakarta Sans',

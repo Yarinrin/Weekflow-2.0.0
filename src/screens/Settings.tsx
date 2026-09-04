@@ -51,7 +51,7 @@ export function SettingsScreen() {
             placeItems: 'center',
             fontFamily: 'var(--font-display)',
             fontSize: 24,
-            fontWeight: 600,
+            fontWeight: 700,
             flex: 'none',
           }}
           aria-hidden
